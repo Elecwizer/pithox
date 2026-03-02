@@ -45,9 +45,7 @@ A fast, readable **manual-combat** survival arena. The player balances aggressio
 
 ## Benchmark reference (scene video + deconstruction template)
 
-### Benchmark video #1 (example)
-```text
-Scene examples:
+### Benchmark videos
 Hades II
 
 Link:
