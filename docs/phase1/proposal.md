@@ -1,36 +1,32 @@
 # Phase 1 Proposal — 3D Vertical Slice  
-**Game:** PITHOX / “The Whispering Pot” (3D adaptation) :contentReference[oaicite:0]{index=0} :contentReference[oaicite:1]{index=1}  
-**Engine:** Unity (C#) :contentReference[oaicite:2]{index=2}  
+**Game:** PITHOX (3D adaptation)
+**Engine:** Unity (C#) 
 **Platform:** PC (Steam)   
-**Team:** Team 7 :contentReference[oaicite:4]{index=4}  
+**Team:** Team 7 
 
 ---
 
 ## 1) What are we building? (start → end, player experience, core loop)
 
 ### Scene summary (vertical slice)
-**Scene name:** *Night 1 — The Clearing*  
-**Goal:** Survive escalating waves, make at least **3 successful tombstone offerings**, and defeat the **Night Mini-Boss**.  
-**Setting:** A **moonlit forest clearing** with **PITHOX at the center** (now built as a 3D diorama/arena). :contentReference[oaicite:5]{index=5}  
-
+**Scene name:** *Night 1*  
+**Goal:** Survive escalating waves, level up some skills and defeat the **Night Mini-Boss**.  
+**Setting:** A **moonlit forest clearing** with **PITHOX at the center** (now built as a 3D diorama/arena).
 #### Start boundary (trigger)
-- Player starts at the edge of the clearing at dusk.
-- On entering the arena radius, **Night begins** and Wave 1 spawns.
+- Player starts at the center of the stage right next to Pithox.
+- On pressing start button, **Night begins** and monsters start approaching.
 
 #### End boundary (success)
-- Mini-Boss defeated → short “calm” moment + results panel (time survived, offerings delivered, upgrades chosen).
+- Mini-Boss defeated → results panel (time survived, highest combo and other stats).
 
 #### Failure states
 - Player HP reaches 0 → defeat screen (restart run).
-- Optional: “Abandon run” via pause menu (counts as fail).
 
 ### Player experience (what it feels like)
-A fast, readable **manual-combat** survival arena where the player takes risks: kill enemies → pick up a tombstone (movement penalty) → sprint it to the pot under pressure → choose one of two upgrades and immediately feel stronger.   
+A fast, readable **manual-combat** survival arena where the player takes risks: kill enemies → pick up a tombstone (movement penalty) → carry it to the pot under pressure → choose an upgrades on level up to get stronger.   
 
 ### Core loop (in the slice)
-**Fight → Tombstone drop → Carry (slowed) → Offer at PITHOX → Choose 1 of 2 upgrades → Repeat → Boss**   
-
-**Player verbs:** move, attack, dash, pick up/drop, offer, choose upgrade. :contentReference[oaicite:8]{index=8}  
+**Fight → Tombstone drop → Carry → Offer at PITHOX → Choose an upgrades → Repeat → Boss**   
 
 ---
 
