@@ -56,13 +56,13 @@ Week 9: prototype of small arena with pithox in the middle that can get tombston
 - Ali: develop player movement 
 - Hassan: develop tombstones mechanic
   
-Week 10: prototype of small arena with pithox in the middle that can get tombstones as offering with score being tracked
+Week 10: prototype of the combat system and enemies behavior with improved look
 - Abdulmohsen: enhance the assets, add UI and some audio
 - Oukba: start working on combat system
 - Ali: develop enemies
 - Hassan: help in enemies and mini boss development
 
-Week 11: prototype of small arena with pithox in the middle that can get tombstones as offering with score being tracked
+Week 11: playable prototype in decent state for play testing outside the team and surveying
 - Abdulmohsen: finish up initial assets for current enemies, mini boss arena, UI and audio
 - Oukba: finish up combat system with help from play testing feedback
 - Ali: finish up enemies and miniboss with help from play testing feedback
