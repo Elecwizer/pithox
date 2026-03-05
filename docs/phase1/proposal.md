@@ -69,31 +69,30 @@ Week 11: prototype of small arena with pithox in the middle that can get tombsto
 - Hassan: general help in lacking areas and proof test game for bugs or issues to be caught early
 
 ### Benchmark videos
-Hades II
-
-Link:
-[https://www.youtube.com/watch?v=91t0ha9x0AE](https://youtu.be/7m1qUqlZ_0g?si=TtU9ezge3KXf4-Kg&t=1166)
-
-Vampire Survivors
-
-Link:
-https://youtu.be/wgYu6lLi6cE?si=GCSiB7QKdG6W5qmW&t=414
 
 What we are replicate:
 - Clear start/end of a single-night encounter
 - Readable enemy telegraphs and hit feedback
 - “Fight → reward choice → continue pressure” rhythm
 
-What we are simplifying (to fit semester scope):
-- Fewer enemy variations 
-- Simpler VFX and animation 
-- Less detailed UI
+#### Hades II
+
+Link:
+[https://www.youtube.com/watch?v=91t0ha9x0AE](https://youtu.be/7m1qUqlZ_0g?si=TtU9ezge3KXf4-Kg&t=1166)
 
 Systems to break down from the videos:
+- 2.5D prespective
 - Controls & camera
 - Combat & hit detection
+- VFX / animation / audio cues
+
+#### Vampire Survivors
+
+Link:
+https://youtu.be/wgYu6lLi6cE?si=GCSiB7QKdG6W5qmW&t=414
+
+Systems to break down from the videos:
 - Enemy AI behaviors & spawning
 - UI feedback & prompts
-- VFX / animation / audio cues
 - Win/lose state flow
 - Performance considerations (spawns, particles, pooling)
