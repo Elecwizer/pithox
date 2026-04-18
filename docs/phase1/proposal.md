@@ -78,11 +78,11 @@ What we are replicate:
 #### Hades II
 
 Link:
-[https://www.youtube.com/watch?v=91t0ha9x0AE](https://youtu.be/7m1qUqlZ_0g?si=TtU9ezge3KXf4-Kg&t=1166)
+[[https://www.youtube.com/watch?v=91t0ha9x0AE](https://youtu.be/F_WaKZJ9B-0?si=MV39GAMDgWM1pJUs&t=6))
 
 Systems to break down from the videos:
-- 2.5D prespective
-- Controls & camera
+- Top Down prespective
+- Controls (we are aiming to make a PC & mobile version so similar to mobile) & camera
 - Combat & hit detection
 - VFX / animation / audio cues
 
