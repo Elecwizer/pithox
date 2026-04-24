@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 622bb53a25651344d88daf9117706c6d
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - slashPoint: {instanceID: 0}
+  - beamPoint: {instanceID: 0}
+  - orbitPoint: {instanceID: 0}
+  - slashPrefab: {fileID: 8400163287243280081, guid: bf6714b199e74c84aa25dc4cb39b82ff, type: 3}
+  - beamPrefab: {fileID: 1509633614159678290, guid: 1606e0e6d9bdc1c45997c7c0cf764381, type: 3}
+  - orbitPrefab: {fileID: 9156902921111423301, guid: e4c57d81713541e41a5230663fe4f927, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
