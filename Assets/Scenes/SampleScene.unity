@@ -716,6 +716,7 @@ GameObject:
   - component: {fileID: 1119670075}
   - component: {fileID: 1119670074}
   - component: {fileID: 1119670077}
+  - component: {fileID: 1119670078}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -824,6 +825,19 @@ MonoBehaviour:
   beamPrefab: {fileID: 1509633614159678290, guid: 1606e0e6d9bdc1c45997c7c0cf764381, type: 3}
   orbitPrefab: {fileID: 9156902921111423301, guid: e4c57d81713541e41a5230663fe4f927, type: 3}
   chainWindowDuration: 1.2
+--- !u!114 &1119670078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1119670071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45a5a7bcdae51cb43a9bccbbbefff8b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Pithox.Combat.PlayerPassiveController
+  pulsePrefab: {fileID: 7246945339040721857, guid: 4f6c38a5e2624f2438289d0d177f53e5, type: 3}
 --- !u!1 &1371597883
 GameObject:
   m_ObjectHideFlags: 0
@@ -946,7 +960,7 @@ Transform:
   m_GameObject: {fileID: 1371597883}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 10, y: 1.5, z: 5}
+  m_LocalPosition: {x: 10, y: 2.5, z: 5}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 1
   m_Children: []
