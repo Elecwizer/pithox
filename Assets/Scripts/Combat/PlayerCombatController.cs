@@ -38,9 +38,21 @@ namespace Pithox.Combat
             TickCooldowns();
             chainManager.Tick(Time.deltaTime);
 
+            if (Input.GetKeyDown(KeyCode.Space))
+                TryUsePrimaryAttack();
+
             if (Input.GetKeyDown(KeyCode.U)) TryUseSkill(skillU);
             if (Input.GetKeyDown(KeyCode.I)) TryUseSkill(skillI);
             if (Input.GetKeyDown(KeyCode.O)) TryUseSkill(skillO);
+        }
+
+        void TryUsePrimaryAttack()
+        {
+            if (!skillU.Cooldown.IsReady)
+                return;
+
+            skillU.Execute(transform, 1);
+            skillU.Cooldown.StartCooldown();
         }
 
         // Attempts to use a skill and apply chain logic
