@@ -75,7 +75,7 @@ What we are replicate:
 - Readable enemy telegraphs and hit feedback
 - “Fight → reward choice → continue pressure” rhythm
 
-#### Hades II
+#### Brawl Stars
 
 Link:
 [[https://www.youtube.com/watch?v=91t0ha9x0AE](https://youtu.be/F_WaKZJ9B-0?si=MV39GAMDgWM1pJUs&t=6))
