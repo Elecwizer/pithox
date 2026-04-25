@@ -2,18 +2,21 @@ using UnityEngine;
 
 namespace Pithox.Player
 {
+    // Handles player movement using CharacterController
     [RequireComponent(typeof(CharacterController))]
     public class PlayerMovement : MonoBehaviour
     {
         [SerializeField] float moveSpeed = 6f;
 
         CharacterController characterController;
+        float speedMultiplier = 1f;
 
         void Awake()
         {
             characterController = GetComponent<CharacterController>();
         }
 
+        // Moves the player in world space
         public void Move(Vector3 worldMoveDirection)
         {
             if (worldMoveDirection.sqrMagnitude > 1f)
@@ -21,12 +24,20 @@ namespace Pithox.Player
                 worldMoveDirection.Normalize();
             }
 
-            characterController.Move(worldMoveDirection * moveSpeed * Time.deltaTime);
+            float finalSpeed = moveSpeed * speedMultiplier;
+            characterController.Move(worldMoveDirection * finalSpeed * Time.deltaTime);
         }
 
-        public float GetMoveSpeed()
+        // Applies movement slow or speed modifier
+        public void SetSpeedMultiplier(float multiplier)
         {
-            return moveSpeed;
+            speedMultiplier = Mathf.Clamp(multiplier, 0f, 1f);
+        }
+
+        // Resets movement speed to normal
+        public void ResetSpeedMultiplier()
+        {
+            speedMultiplier = 1f;
         }
     }
 }

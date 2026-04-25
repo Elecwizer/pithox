@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace Pithox.Player
 {
+    // Handles player input and passes it to movement and facing systems
     [RequireComponent(typeof(PlayerMovement))]
     [RequireComponent(typeof(PlayerFacing))]
     public class PlayerController : MonoBehaviour
@@ -28,6 +29,7 @@ namespace Pithox.Player
             }
         }
 
+        // Reads WASD input
         Vector2 ReadMoveInput()
         {
             float horizontal = 0f;
@@ -41,10 +43,10 @@ namespace Pithox.Player
             return new Vector2(horizontal, vertical);
         }
 
+        // Converts 2D input into world space direction
         Vector3 ConvertInputToWorldDirection(Vector2 moveInput)
         {
-            Vector3 direction = new Vector3(moveInput.x, 0f, moveInput.y);
-            return direction.normalized;
+            return new Vector3(moveInput.x, 0f, moveInput.y).normalized;
         }
     }
 }

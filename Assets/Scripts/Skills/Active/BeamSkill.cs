@@ -1,4 +1,5 @@
 using UnityEngine;
+using Pithox.Combat;
 
 namespace Pithox.Skills
 {
@@ -23,6 +24,19 @@ namespace Pithox.Skills
             );
 
             beam.transform.SetParent(playerTransform);
+            beam.transform.localRotation = Quaternion.identity;
+
+            BeamGrowEffect growEffect = beam.GetComponent<BeamGrowEffect>();
+            if (growEffect != null)
+            {
+                growEffect.Initialize(playerTransform);
+            }
+
+            DamageDealer damageDealer = beam.GetComponent<DamageDealer>();
+            if (damageDealer != null)
+            {
+                damageDealer.Initialize(playerTransform.gameObject, chainPosition, 5f);
+            }
 
             Object.Destroy(beam, 1.2f);
 

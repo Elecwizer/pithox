@@ -1,4 +1,5 @@
 using UnityEngine;
+using Pithox.Combat;
 
 namespace Pithox.Skills
 {
@@ -21,6 +22,12 @@ namespace Pithox.Skills
                 slashPoint.position,
                 playerTransform.rotation
             );
+
+            DamageDealer damageDealer = slash.GetComponent<DamageDealer>();
+            if (damageDealer != null)
+            {
+                damageDealer.Initialize(playerTransform.gameObject, chainPosition, 10f);
+            }
 
             Object.Destroy(slash, 0.25f);
 

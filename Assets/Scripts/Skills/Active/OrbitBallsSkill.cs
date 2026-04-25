@@ -1,4 +1,5 @@
 using UnityEngine;
+using Pithox.Combat;
 
 namespace Pithox.Skills
 {
@@ -23,6 +24,12 @@ namespace Pithox.Skills
             );
 
             orbit.transform.SetParent(playerTransform);
+
+            DamageDealer[] damageDealers = orbit.GetComponentsInChildren<DamageDealer>();
+            foreach (DamageDealer damageDealer in damageDealers)
+            {
+                damageDealer.Initialize(playerTransform.gameObject, chainPosition, 7f);
+            }
 
             Object.Destroy(orbit, 3f);
 
