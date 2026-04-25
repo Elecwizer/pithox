@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 209237902928811670}
   - component: {fileID: 3103712824282186162}
   - component: {fileID: 2311286900818726786}
-  - component: {fileID: 3040957118845757214}
   - component: {fileID: 1089732890258732998}
   m_Layer: 0
   m_Name: ProjectileEnemy
@@ -116,25 +115,6 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &3040957118845757214
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 950356191018943525}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1f621fc27df9f479c8949fa068cf9be0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Pithox.Enemies.EnemyBase
-  maxHealth: 20
-  moveSpeed: 3
-  stopDistance: 1
-  touchDamage: 5
-  touchDamageInterval: 0.5
-  touchRange: 1.25
-  playerTag: Player
 --- !u!114 &1089732890258732998
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -153,6 +133,10 @@ MonoBehaviour:
   touchDamage: 5
   touchDamageInterval: 0.5
   touchRange: 1.25
+  tombPrefab: {fileID: 8516115980770912612, guid: 5abc4fc688aab68489d0812631e8c0d8, type: 3}
+  defaultDeathSfx: {fileID: 8300000, guid: 937d9dd416640354c8cdd61ecb3503c3, type: 3}
+  uniqueDeathSfx: {fileID: 0}
+  deathSfxVolume: 1
   playerTag: Player
   projectilePrefab: {fileID: 3451427347294852186, guid: 2e2e22806a5f34ab0b1d92e45c6bf1aa, type: 3}
   firePoint: {fileID: 0}
@@ -161,3 +145,5 @@ MonoBehaviour:
   projectileSpeed: 10
   projectileDamage: 10
   preferredDistance: 5
+  distanceTolerance: 1
+  repositionSpeedMultiplier: 0.45

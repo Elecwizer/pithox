@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 6927528464430304995}
   - component: {fileID: 6656433904500912788}
   - component: {fileID: 2228142895600269087}
-  - component: {fileID: 4485731015218928825}
   m_Layer: 0
   m_Name: FastEnemy
   m_TagString: Untagged
@@ -132,24 +131,15 @@ MonoBehaviour:
   touchDamage: 5
   touchDamageInterval: 0.5
   touchRange: 1.25
+  tombPrefab: {fileID: 8516115980770912612, guid: 5abc4fc688aab68489d0812631e8c0d8, type: 3}
+  defaultDeathSfx: {fileID: 8300000, guid: 937d9dd416640354c8cdd61ecb3503c3, type: 3}
+  uniqueDeathSfx: {fileID: 0}
+  deathSfxVolume: 1
   playerTag: Player
-  speedMultiplier: 1.5
---- !u!114 &4485731015218928825
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 310799251652693266}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1f621fc27df9f479c8949fa068cf9be0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Pithox.Enemies.EnemyBase
-  maxHealth: 20
-  moveSpeed: 3
-  stopDistance: 1
-  touchDamage: 5
-  touchDamageInterval: 0.5
-  touchRange: 1.25
-  playerTag: Player
+  chaseSpeedMultiplier: 1.4
+  dashSpeedMultiplier: 2.6
+  dashTriggerDistance: 2.5
+  dashDuration: 0.45
+  orbitDuration: 1
+  orbitRadius: 3
+  orbitAngularSpeed: 230

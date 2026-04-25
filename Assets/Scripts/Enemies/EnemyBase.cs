@@ -15,11 +15,18 @@ namespace Pithox.Enemies
         [SerializeField] protected float touchDamageInterval = 0.5f;
         [SerializeField] protected float touchRange = 1.25f;
 
+        [Header("Death")]
+        [SerializeField] GameObject tombPrefab;
+        [SerializeField] AudioClip defaultDeathSfx;
+        [SerializeField] AudioClip uniqueDeathSfx;
+        [SerializeField] float deathSfxVolume = 1f;
+
         [SerializeField] protected string playerTag = "Player";
 
         protected Transform playerTarget;
         float currentHealth;
         float nextTouchDamageTime;
+        bool isDead;
 
         protected virtual void Awake()
         {
@@ -45,6 +52,9 @@ namespace Pithox.Enemies
 
         public virtual void TakeDamage(DamageData damageData)
         {
+            if (isDead)
+                return;
+
             currentHealth -= damageData.Amount;
             if (currentHealth <= 0f)
             {
@@ -54,6 +64,33 @@ namespace Pithox.Enemies
 
         protected virtual void Die()
         {
+            if (isDead)
+                return;
+
+            isDead = true;
+
+            if (tombPrefab != null)
+            {
+                Vector3 tombPosition = new Vector3(transform.position.x, 0f, transform.position.z);
+                Instantiate(tombPrefab, tombPosition, tombPrefab.transform.rotation);
+            }
+
+            AudioClip clip = uniqueDeathSfx != null ? uniqueDeathSfx : defaultDeathSfx;
+
+            if (clip != null)
+            {
+                GameObject sfxObject = new GameObject("Enemy Death SFX");
+                sfxObject.transform.position = transform.position;
+
+                AudioSource audioSource = sfxObject.AddComponent<AudioSource>();
+                audioSource.clip = clip;
+                audioSource.volume = deathSfxVolume;
+                audioSource.spatialBlend = 0f;
+                audioSource.Play();
+
+                Destroy(sfxObject, clip.length);
+            }
+
             Destroy(gameObject);
         }
 
