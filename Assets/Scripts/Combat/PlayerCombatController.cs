@@ -16,7 +16,7 @@ namespace Pithox.Combat
         [SerializeField] GameObject beamPrefab;
         [SerializeField] GameObject orbitPrefab;
 
-        [SerializeField] float chainWindowDuration = 1.2f;
+        [SerializeField] float chainWindowDuration = 1f;
 
         ChainManager chainManager;
 

@@ -1,8 +1,10 @@
 using UnityEngine;
 using Pithox.Combat;
+using Pithox.Player;
 
 namespace Pithox.Skills
 {
+    // Spawns a simple forward slash skill
     public class ArcSlashSkill : ActiveSkill
     {
         readonly GameObject slashPrefab;
@@ -15,6 +17,7 @@ namespace Pithox.Skills
             this.slashPoint = slashPoint;
         }
 
+        // Executes slash and initializes damage
         public override void Execute(Transform playerTransform, int chainPosition)
         {
             GameObject slash = Object.Instantiate(
@@ -24,14 +27,24 @@ namespace Pithox.Skills
             );
 
             DamageDealer damageDealer = slash.GetComponent<DamageDealer>();
+
             if (damageDealer != null)
-            {
-                damageDealer.Initialize(playerTransform.gameObject, chainPosition, 10f);
-            }
+                damageDealer.Initialize(playerTransform.gameObject, chainPosition, 10f * GetDamageMultiplier(playerTransform));
 
             Object.Destroy(slash, 0.25f);
 
             Debug.Log($"Used Arc Slash at chain position {chainPosition}");
+        }
+
+        // Gets current player damage multiplier
+        float GetDamageMultiplier(Transform playerTransform)
+        {
+            PlayerStats stats = playerTransform.GetComponent<PlayerStats>();
+
+            if (stats == null)
+                return 1f;
+
+            return stats.DamageMultiplier;
         }
     }
 }

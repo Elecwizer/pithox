@@ -38,4 +38,12 @@ namespace Pithox.Player
             onDeath?.Invoke();
         }
     }
+
+        // Restores player health
+        public void Heal(float amount)
+        {
+            currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
+            Debug.Log($"Player healed {amount}. HP: {currentHealth}/{maxHealth}");
+        }
+    
 }
