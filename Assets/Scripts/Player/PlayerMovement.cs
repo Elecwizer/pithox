@@ -7,9 +7,12 @@ namespace Pithox.Player
     public class PlayerMovement : MonoBehaviour
     {
         [SerializeField] float moveSpeed = 6f;
+        [SerializeField] float gravity = -30f;
+        [SerializeField] float groundedStickForce = -2f;
 
         CharacterController characterController;
         float speedMultiplier = 1f;
+        float verticalVelocity;
 
         void Awake()
         {
@@ -24,8 +27,19 @@ namespace Pithox.Player
                 worldMoveDirection.Normalize();
             }
 
+            if (characterController.isGrounded && verticalVelocity < 0f)
+            {
+                verticalVelocity = groundedStickForce;
+            }
+            else
+            {
+                verticalVelocity += gravity * Time.deltaTime;
+            }
+
             float finalSpeed = moveSpeed * speedMultiplier;
-            characterController.Move(worldMoveDirection * finalSpeed * Time.deltaTime);
+            Vector3 horizontalMove = worldMoveDirection * finalSpeed;
+            Vector3 fullMove = horizontalMove + Vector3.up * verticalVelocity;
+            characterController.Move(fullMove * Time.deltaTime);
         }
 
         // Applies movement slow or speed modifier
