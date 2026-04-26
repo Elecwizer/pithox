@@ -9,6 +9,10 @@ namespace Pithox.Skills
     {
         readonly GameObject slashPrefab;
         readonly Transform slashPoint;
+        const float SlashForwardOffset = 0.6f;
+        const float SlashLifetime = 0.35f;
+        const float SlashHeightOffset = 0.55f;
+        const float SlashColliderHeight = 6f;
 
         public ArcSlashSkill(GameObject slashPrefab, Transform slashPoint)
             : base("arc_slash", "Arc Slash", 2f)
@@ -20,18 +24,27 @@ namespace Pithox.Skills
         // Executes slash and initializes damage
         public override void Execute(Transform playerTransform, int chainPosition)
         {
+            Vector3 spawnPosition = slashPoint.position + playerTransform.forward * SlashForwardOffset;
+            spawnPosition.y = playerTransform.position.y + SlashHeightOffset;
             GameObject slash = Object.Instantiate(
                 slashPrefab,
-                slashPoint.position,
+                spawnPosition,
                 playerTransform.rotation
             );
+
+            if (slash.TryGetComponent<BoxCollider>(out BoxCollider slashCollider))
+            {
+                Vector3 size = slashCollider.size;
+                size.y = Mathf.Max(size.y, SlashColliderHeight);
+                slashCollider.size = size;
+            }
 
             DamageDealer damageDealer = slash.GetComponent<DamageDealer>();
 
             if (damageDealer != null)
                 damageDealer.Initialize(playerTransform.gameObject, chainPosition, 10f * GetDamageMultiplier(playerTransform));
 
-            Object.Destroy(slash, 0.25f);
+            Object.Destroy(slash, SlashLifetime);
 
             Debug.Log($"Used Arc Slash at chain position {chainPosition}");
         }

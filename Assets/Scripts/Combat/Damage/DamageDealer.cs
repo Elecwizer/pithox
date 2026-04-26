@@ -43,9 +43,26 @@ namespace Pithox.Combat
         // Attempts to apply damage
         void TryDamage(Collider other)
         {
-            IDamageable damageable = other.GetComponentInParent<IDamageable>();
+            IDamageable damageable = other.GetComponent<IDamageable>();
+            damageable ??= other.GetComponentInParent<IDamageable>();
+            damageable ??= other.GetComponentInChildren<IDamageable>();
 
-            if (damageable == null) return;
+            if (damageable == null)
+                return;
+
+            if (source != null && damageable is Component damageableComponent)
+            {
+                Transform sourceTransform = source.transform;
+                Transform targetTransform = damageableComponent.transform;
+
+                // Prevent skills from damaging the caster or the caster hierarchy.
+                if (targetTransform == sourceTransform
+                    || targetTransform.IsChildOf(sourceTransform)
+                    || sourceTransform.IsChildOf(targetTransform))
+                {
+                    return;
+                }
+            }
 
             if (!canHitSameTargetMultipleTimes && hitTargets.Contains(damageable))
                 return;
