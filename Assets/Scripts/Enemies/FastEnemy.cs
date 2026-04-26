@@ -24,6 +24,7 @@ namespace Pithox.Enemies
         Vector3 dashDirection;
         float stateTimer;
         int orbitDirection = 1;
+        bool isUsingManualMovement;
 
         protected override void TickMovement()
         {
@@ -54,8 +55,31 @@ namespace Pithox.Enemies
             float distance = Mathf.Sqrt(sqrDistance);
             Vector3 chaseDirection = toPlayer / distance;
 
-            transform.position += chaseDirection * moveSpeed * chaseSpeedMultiplier * Time.deltaTime;
-            transform.forward = chaseDirection;
+            if (CanUseNavMesh())
+            {
+                if (isUsingManualMovement)
+                {
+                    navMeshAgent.Warp(transform.position);
+                    navMeshAgent.updatePosition = true;
+                    navMeshAgent.isStopped = false;
+                    isUsingManualMovement = false;
+                }
+
+                navMeshAgent.speed = moveSpeed * chaseSpeedMultiplier;
+                navMeshAgent.stoppingDistance = Mathf.Max(stopDistance, dashTriggerDistance);
+                navMeshAgent.SetDestination(playerTarget.position);
+
+                Vector3 desiredVelocity = Flatten(navMeshAgent.desiredVelocity);
+                if (desiredVelocity.sqrMagnitude > 0.001f)
+                {
+                    transform.forward = desiredVelocity.normalized;
+                }
+            }
+            else
+            {
+                transform.position += chaseDirection * moveSpeed * chaseSpeedMultiplier * Time.deltaTime;
+                transform.forward = chaseDirection;
+            }
 
             if (distance <= dashTriggerDistance)
             {
@@ -63,6 +87,7 @@ namespace Pithox.Enemies
                 stateTimer = dashDuration;
                 dashDirection = chaseDirection;
                 orbitDirection = Random.value < 0.5f ? -1 : 1;
+                EnterManualMovementMode();
             }
         }
 
@@ -113,6 +138,17 @@ namespace Pithox.Enemies
             {
                 state = FastEnemyState.Chase;
             }
+        }
+
+        void EnterManualMovementMode()
+        {
+            if (!CanUseNavMesh())
+                return;
+
+            navMeshAgent.isStopped = true;
+            navMeshAgent.ResetPath();
+            navMeshAgent.updatePosition = false;
+            isUsingManualMovement = true;
         }
 
         static Vector3 Flatten(Vector3 value)

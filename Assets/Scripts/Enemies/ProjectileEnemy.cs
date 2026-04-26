@@ -46,15 +46,32 @@ namespace Pithox.Enemies
 
             float maxPreferredDistance = preferredDistance + distanceTolerance;
             float minPreferredDistance = Mathf.Max(stopDistance, preferredDistance - distanceTolerance);
-            float repositionSpeed = moveSpeed * repositionSpeedMultiplier;
+            if (CanUseNavMesh())
+            {
+                float repositionSpeed = moveSpeed * repositionSpeedMultiplier;
+                navMeshAgent.speed = repositionSpeed;
+                navMeshAgent.stoppingDistance = 0.05f;
 
+                if (distance > maxPreferredDistance || distance < minPreferredDistance)
+                {
+                    Vector3 desiredPosition = playerTarget.position - direction * preferredDistance;
+                    navMeshAgent.SetDestination(desiredPosition);
+                }
+                else
+                {
+                    navMeshAgent.ResetPath();
+                }
+                return;
+            }
+
+            float fallbackRepositionSpeed = moveSpeed * repositionSpeedMultiplier;
             if (distance > maxPreferredDistance)
             {
-                transform.position += direction * repositionSpeed * Time.deltaTime;
+                transform.position += direction * fallbackRepositionSpeed * Time.deltaTime;
             }
             else if (distance < minPreferredDistance)
             {
-                transform.position -= direction * repositionSpeed * Time.deltaTime;
+                transform.position -= direction * fallbackRepositionSpeed * Time.deltaTime;
             }
         }
 

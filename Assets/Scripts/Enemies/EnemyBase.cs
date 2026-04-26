@@ -1,5 +1,6 @@
 using Pithox.Combat;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace Pithox.Enemies
 {
@@ -24,6 +25,7 @@ namespace Pithox.Enemies
         [SerializeField] protected string playerTag = "Player";
 
         protected Transform playerTarget;
+        protected NavMeshAgent navMeshAgent;
         float currentHealth;
         float nextTouchDamageTime;
         bool isDead;
@@ -31,6 +33,25 @@ namespace Pithox.Enemies
         protected virtual void Awake()
         {
             currentHealth = maxHealth;
+            navMeshAgent = GetComponent<NavMeshAgent>();
+
+            if (navMeshAgent != null)
+            {
+                navMeshAgent.updateRotation = false;
+                navMeshAgent.speed = moveSpeed;
+                navMeshAgent.stoppingDistance = stopDistance;
+                navMeshAgent.acceleration = Mathf.Max(8f, moveSpeed * 4f);
+                navMeshAgent.angularSpeed = 720f;
+                navMeshAgent.autoBraking = false;
+            }
+
+            Rigidbody body = GetComponent<Rigidbody>();
+            if (body != null)
+            {
+                body.isKinematic = true;
+                body.useGravity = false;
+                body.constraints = RigidbodyConstraints.FreezeRotation;
+            }
         }
 
         protected virtual void Start()
@@ -68,6 +89,11 @@ namespace Pithox.Enemies
                 return;
 
             isDead = true;
+            if (CanUseNavMesh())
+            {
+                navMeshAgent.isStopped = true;
+                navMeshAgent.ResetPath();
+            }
 
             if (tombPrefab != null)
             {
@@ -96,6 +122,21 @@ namespace Pithox.Enemies
 
         protected virtual void TickMovement()
         {
+            if (CanUseNavMesh())
+            {
+                navMeshAgent.speed = moveSpeed;
+                navMeshAgent.stoppingDistance = stopDistance;
+                navMeshAgent.SetDestination(playerTarget.position);
+
+                Vector3 desiredVelocity = navMeshAgent.desiredVelocity;
+                desiredVelocity.y = 0f;
+                if (desiredVelocity.sqrMagnitude > 0.001f)
+                {
+                    transform.forward = desiredVelocity.normalized;
+                }
+                return;
+            }
+
             Vector3 toPlayer = playerTarget.position - transform.position;
             toPlayer.y = 0f;
 
@@ -144,6 +185,11 @@ namespace Pithox.Enemies
         {
             GameObject playerObject = GameObject.FindGameObjectWithTag(playerTag);
             playerTarget = playerObject != null ? playerObject.transform : null;
+        }
+
+        protected bool CanUseNavMesh()
+        {
+            return navMeshAgent != null && navMeshAgent.enabled && navMeshAgent.isOnNavMesh;
         }
     }
 }
