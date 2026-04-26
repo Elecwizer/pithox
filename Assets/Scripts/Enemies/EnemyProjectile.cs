@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace Pithox.Enemies
 {
+    [RequireComponent(typeof(Collider))]
+    [RequireComponent(typeof(Rigidbody))]
     public class EnemyProjectile : MonoBehaviour
     {
         [SerializeField] float speed = 8f;
@@ -11,6 +13,20 @@ namespace Pithox.Enemies
 
         Vector3 travelDirection;
         GameObject sourceEnemy;
+        Collider projectileCollider;
+        Rigidbody projectileRigidbody;
+
+        void Awake()
+        {
+            projectileCollider = GetComponent<Collider>();
+            projectileRigidbody = GetComponent<Rigidbody>();
+
+            // Projectile uses trigger overlaps for reliable hit detection while moved manually.
+            projectileCollider.isTrigger = true;
+            projectileRigidbody.isKinematic = true;
+            projectileRigidbody.useGravity = false;
+            projectileRigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+        }
 
         public void Initialize(Vector3 direction, float projectileSpeed, float projectileDamage, GameObject source)
         {
@@ -31,7 +47,8 @@ namespace Pithox.Enemies
             if (sourceEnemy != null && other.gameObject == sourceEnemy)
                 return;
 
-            if (other.TryGetComponent<IDamageable>(out IDamageable damageable))
+            if (other.TryGetComponent<IDamageable>(out IDamageable damageable)
+                || other.GetComponentInParent<IDamageable>() is IDamageable parentDamageable && (damageable = parentDamageable) != null)
             {
                 damageable.TakeDamage(new DamageData(
                     damage,

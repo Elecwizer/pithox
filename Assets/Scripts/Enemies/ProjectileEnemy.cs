@@ -11,6 +11,7 @@ namespace Pithox.Enemies
         [SerializeField] float attackCooldown = 3f;
         [SerializeField] float projectileSpeed = 10f;
         [SerializeField] float projectileDamage = 10f;
+        [SerializeField] float projectileSpawnHeight = 0.4f;
         [SerializeField] float preferredDistance = 8f;
         [SerializeField] float distanceTolerance = 1f;
         [SerializeField, Range(0.1f, 1f)] float repositionSpeedMultiplier = 0.45f;
@@ -72,6 +73,7 @@ namespace Pithox.Enemies
             Vector3 shotDirection = toPlayer.normalized;
             AimFirePoint(shotDirection);
             Vector3 spawnPosition = firePoint != null ? firePoint.position : transform.position + shotDirection;
+            spawnPosition += Vector3.up * projectileSpawnHeight;
             EnemyProjectile projectile = Instantiate(
                 projectilePrefab,
                 spawnPosition,

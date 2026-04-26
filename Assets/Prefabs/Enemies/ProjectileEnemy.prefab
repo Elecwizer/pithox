@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 3103712824282186162}
   - component: {fileID: 2311286900818726786}
   - component: {fileID: 1089732890258732998}
+  - component: {fileID: -358469538148126506}
   m_Layer: 0
   m_Name: ProjectileEnemy
   m_TagString: Untagged
@@ -68,7 +69,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 0c402ab63490d469a8c2678f9b35954c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -144,6 +145,34 @@ MonoBehaviour:
   attackCooldown: 1.25
   projectileSpeed: 10
   projectileDamage: 10
+  projectileSpawnHeight: 0.4
   preferredDistance: 5
   distanceTolerance: 1
   repositionSpeedMultiplier: 0.45
+--- !u!54 &-358469538148126506
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 950356191018943525}
+  serializedVersion: 5
+  m_Mass: 2
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
