@@ -8,17 +8,27 @@ namespace Pithox.Combat
     {
         [Header("Passive Prefabs")]
         [SerializeField] GameObject pulsePrefab;
+        [SerializeField] GameObject healVfxPrefab;
+        [SerializeField] GameObject damageBuffVfxPrefab;
 
-        PassiveSkill passiveSkill;
+        PassiveSkill[] passiveSkills;
 
         void Awake()
         {
-            passiveSkill = new PulsePassiveSkill(pulsePrefab);
+            passiveSkills = new PassiveSkill[]
+            {
+                new PulsePassiveSkill(pulsePrefab),
+                new HealPassiveSkill(healVfxPrefab, 20f),
+                new DamageBoostPassiveSkill(damageBuffVfxPrefab, 1.5f, 6f)
+            };
         }
 
         void Update()
         {
-            TickPassive(passiveSkill);
+            foreach (PassiveSkill skill in passiveSkills)
+            {
+                TickPassive(skill);
+            }
         }
 
         // Updates passive cooldown and triggers when ready

@@ -19,15 +19,14 @@ namespace Pithox.Skills
         {
             GameObject pulse = Object.Instantiate(
                 pulsePrefab,
-                playerTransform.position + Vector3.up,
+                playerTransform.position,
                 Quaternion.identity
             );
 
             DamageDealer damageDealer = pulse.GetComponent<DamageDealer>();
+
             if (damageDealer != null)
-            {
                 damageDealer.Initialize(playerTransform.gameObject, 0, 8f);
-            }
 
             Object.Destroy(pulse, 0.4f);
 

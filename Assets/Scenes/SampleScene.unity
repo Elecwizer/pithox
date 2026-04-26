@@ -717,6 +717,8 @@ GameObject:
   - component: {fileID: 1119670074}
   - component: {fileID: 1119670077}
   - component: {fileID: 1119670078}
+  - component: {fileID: 1119670079}
+  - component: {fileID: 1119670080}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -824,7 +826,7 @@ MonoBehaviour:
   slashPrefab: {fileID: 8400163287243280081, guid: bf6714b199e74c84aa25dc4cb39b82ff, type: 3}
   beamPrefab: {fileID: 1509633614159678290, guid: 1606e0e6d9bdc1c45997c7c0cf764381, type: 3}
   orbitPrefab: {fileID: 9156902921111423301, guid: e4c57d81713541e41a5230663fe4f927, type: 3}
-  chainWindowDuration: 1.2
+  chainWindowDuration: 1
 --- !u!114 &1119670078
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -838,6 +840,33 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pithox.Combat.PlayerPassiveController
   pulsePrefab: {fileID: 7246945339040721857, guid: 4f6c38a5e2624f2438289d0d177f53e5, type: 3}
+  healVfxPrefab: {fileID: 3630293355615783206, guid: 4384f43a54e04c84b914e0b40e87db4b, type: 3}
+  damageBuffVfxPrefab: {fileID: 374137812284726351, guid: bfd0af95246490d4295143ba2187f2b8, type: 3}
+--- !u!114 &1119670079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1119670071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f875c983aba0f8b40be638d62f767c38, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Pithox.Player.PlayerHealth
+  maxHealth: 100
+--- !u!114 &1119670080
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1119670071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d065c2025ad20f84d9de057bb5017526, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
 --- !u!1 &1371597883
 GameObject:
   m_ObjectHideFlags: 0

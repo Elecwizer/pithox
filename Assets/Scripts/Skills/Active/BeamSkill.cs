@@ -1,8 +1,10 @@
 using UnityEngine;
 using Pithox.Combat;
+using Pithox.Player;
 
 namespace Pithox.Skills
 {
+    // Spawns a forward beam skill
     public class BeamSkill : ActiveSkill
     {
         readonly GameObject beamPrefab;
@@ -15,6 +17,7 @@ namespace Pithox.Skills
             this.beamPoint = beamPoint;
         }
 
+        // Executes beam and initializes damage
         public override void Execute(Transform playerTransform, int chainPosition)
         {
             GameObject beam = Object.Instantiate(
@@ -27,20 +30,29 @@ namespace Pithox.Skills
             beam.transform.localRotation = Quaternion.identity;
 
             BeamGrowEffect growEffect = beam.GetComponent<BeamGrowEffect>();
+
             if (growEffect != null)
-            {
                 growEffect.Initialize(playerTransform);
-            }
 
             DamageDealer damageDealer = beam.GetComponent<DamageDealer>();
+
             if (damageDealer != null)
-            {
-                damageDealer.Initialize(playerTransform.gameObject, chainPosition, 5f);
-            }
+                damageDealer.Initialize(playerTransform.gameObject, chainPosition, 5f * GetDamageMultiplier(playerTransform));
 
             Object.Destroy(beam, 1.2f);
 
             Debug.Log($"Used Beam at chain position {chainPosition}");
+        }
+
+        // Gets current player damage multiplier
+        float GetDamageMultiplier(Transform playerTransform)
+        {
+            PlayerStats stats = playerTransform.GetComponent<PlayerStats>();
+
+            if (stats == null)
+                return 1f;
+
+            return stats.DamageMultiplier;
         }
     }
 }
