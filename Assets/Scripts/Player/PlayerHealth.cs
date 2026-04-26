@@ -37,7 +37,6 @@ namespace Pithox.Player
             Debug.Log("Player died.");
             onDeath?.Invoke();
         }
-    }
 
         // Restores player health
         public void Heal(float amount)
@@ -45,5 +44,6 @@ namespace Pithox.Player
             currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
             Debug.Log($"Player healed {amount}. HP: {currentHealth}/{maxHealth}");
         }
-    
+    }
+
 }
