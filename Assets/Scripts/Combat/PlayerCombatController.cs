@@ -1,86 +1,99 @@
 using UnityEngine;
+using Pithox.Player;
 using Pithox.Skills;
 
 namespace Pithox.Combat
 {
-    // Handles player skill input and communicates with chain system
     public class PlayerCombatController : MonoBehaviour
     {
-        [Header("Skill Points")]
+        [Header("Slash")]
         [SerializeField] Transform slashPoint;
-        [SerializeField] Transform beamPoint;
-        [SerializeField] Transform orbitPoint;
-
-        [Header("Prefabs")]
         [SerializeField] GameObject slashPrefab;
-        [SerializeField] GameObject beamPrefab;
-        [SerializeField] GameObject orbitPrefab;
+        [SerializeField] float attackCooldown = 0.4f;
+        [SerializeField] float searchRadius = 9f;
+        [SerializeField] LayerMask enemyMask = ~0;
+        [SerializeField] KeyCode attackKey = KeyCode.Space;
 
-        [SerializeField] float chainWindowDuration = 1f;
+        [Header("Refs")]
+        [SerializeField] PlayerTombCarry tombCarry;
 
-        ChainManager chainManager;
-
-        ActiveSkill skillU;
-        ActiveSkill skillI;
-        ActiveSkill skillO;
+        ArcSlashSkill basicAttack;
 
         void Awake()
         {
-            chainManager = new ChainManager(chainWindowDuration);
-
-            skillU = new ArcSlashSkill(slashPrefab, slashPoint);
-            skillI = new BeamSkill(beamPrefab, beamPoint);
-            skillO = new OrbitBallsSkill(orbitPrefab, orbitPoint);
+            basicAttack = new ArcSlashSkill(slashPrefab, slashPoint, attackCooldown);
         }
 
         void Update()
         {
-            TickCooldowns();
-            chainManager.Tick(Time.deltaTime);
+            basicAttack.Cooldown.Tick(Time.deltaTime);
 
-            if (Input.GetKeyDown(KeyCode.Space))
-                TryUsePrimaryAttack();
-
-            if (Input.GetKeyDown(KeyCode.U)) TryUseSkill(skillU);
-            if (Input.GetKeyDown(KeyCode.I)) TryUseSkill(skillI);
-            if (Input.GetKeyDown(KeyCode.O)) TryUseSkill(skillO);
-        }
-
-        void TryUsePrimaryAttack()
-        {
-            if (!skillU.Cooldown.IsReady)
+            if (!Input.GetKeyDown(attackKey))
                 return;
 
-            skillU.Execute(transform, 1);
-            skillU.Cooldown.StartCooldown();
-        }
-
-        // Attempts to use a skill and apply chain logic
-        void TryUseSkill(ActiveSkill skill)
-        {
-            if (!chainManager.CanUseSkill(skill))
+            if (tombCarry != null && tombCarry.IsCarrying)
                 return;
 
-            int chainPosition = chainManager.RegisterSkillUse(skill);
+            if (!basicAttack.Cooldown.IsReady)
+                return;
 
-            ApplyChainFeedback(chainPosition);
-            skill.Execute(transform, chainPosition);
+            AimSlash();
+            basicAttack.Execute(transform, 1);
+            basicAttack.Cooldown.StartCooldown();
         }
 
-        // Prints simple feedback for chain state
-        void ApplyChainFeedback(int chainPosition)
+        void AimSlash()
         {
-            if (chainPosition == 1) Debug.Log("CHAIN 1");
-            if (chainPosition == 2) Debug.Log("CHAIN 2");
-            if (chainPosition == 3) Debug.Log("CHAIN 3");
+            if (slashPoint == null)
+                return;
+
+            Transform target = FindNearestEnemy();
+            Vector3 dir;
+
+            if (target != null)
+            {
+                dir = target.position - slashPoint.position;
+                dir.y = 0f;
+            }
+            else
+            {
+                dir = transform.forward;
+                dir.y = 0f;
+            }
+
+            if (dir.sqrMagnitude < 0.0001f)
+                return;
+
+            slashPoint.rotation = Quaternion.LookRotation(dir.normalized, Vector3.up);
         }
 
-        // Updates cooldown timers
-        void TickCooldowns()
+        Transform FindNearestEnemy()
         {
-            skillU.Cooldown.Tick(Time.deltaTime);
-            skillI.Cooldown.Tick(Time.deltaTime);
-            skillO.Cooldown.Tick(Time.deltaTime);
+            Collider[] hits = Physics.OverlapSphere(transform.position, searchRadius, enemyMask, QueryTriggerInteraction.Collide);
+            Transform best = null;
+            float bestSqr = Mathf.Infinity;
+
+            foreach (Collider c in hits)
+            {
+                if (c == null) continue;
+                if (c.GetComponentInParent<IDamageable>() == null) continue;
+
+                Vector3 to = c.transform.position - transform.position;
+                to.y = 0f;
+                float sqr = to.sqrMagnitude;
+                if (sqr < bestSqr)
+                {
+                    bestSqr = sqr;
+                    best = c.transform;
+                }
+            }
+            return best;
+        }
+
+        void OnDrawGizmosSelected()
+        {
+            Gizmos.color = new Color(1f, 0.5f, 0f, 0.3f);
+            Gizmos.DrawWireSphere(transform.position, searchRadius);
         }
     }
 }

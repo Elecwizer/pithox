@@ -31,7 +31,7 @@ namespace Pithox.Enemies
 
         protected override void TickMovement()
         {
-            if (playerTarget == null)
+            if (agent == null || !agent.isOnNavMesh || playerTarget == null)
                 return;
 
             Vector3 toPlayer = playerTarget.position - transform.position;
@@ -44,17 +44,24 @@ namespace Pithox.Enemies
             Vector3 direction = toPlayer / distance;
             transform.forward = direction;
 
-            float maxPreferredDistance = preferredDistance + distanceTolerance;
-            float minPreferredDistance = Mathf.Max(stopDistance, preferredDistance - distanceTolerance);
-            float repositionSpeed = moveSpeed * repositionSpeedMultiplier;
+            agent.speed = moveSpeed * repositionSpeedMultiplier;
 
-            if (distance > maxPreferredDistance)
+            float outerHigh = preferredDistance + distanceTolerance;
+            float outerLow = preferredDistance + distanceTolerance * 0.3f;
+            float innerHigh = Mathf.Max(stopDistance, preferredDistance - distanceTolerance * 0.3f);
+            float innerLow = Mathf.Max(stopDistance, preferredDistance - distanceTolerance);
+
+            if (distance > outerHigh)
             {
-                transform.position += direction * repositionSpeed * Time.deltaTime;
+                agent.SetDestination(playerTarget.position);
             }
-            else if (distance < minPreferredDistance)
+            else if (distance < innerLow)
             {
-                transform.position -= direction * repositionSpeed * Time.deltaTime;
+                agent.SetDestination(transform.position - direction * 2f);
+            }
+            else if (distance < outerLow && distance > innerHigh)
+            {
+                agent.ResetPath();
             }
         }
 

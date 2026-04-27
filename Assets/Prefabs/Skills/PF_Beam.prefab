@@ -70,7 +70,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 5905d036b93512143aeb9e4e992ce1ae, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -157,7 +157,9 @@ MonoBehaviour:
   damageAmount: 10
   canHitSameTargetMultipleTimes: 1
   sameTargetHitInterval: 0.25
-  destroyAfterHit: 0
+  sweepMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!114 &6696479538093193099
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -171,7 +173,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pithox.Skills.BeamGrowEffect
   maxLength: 8
-  width: 0.35
-  height: 0.35
   growDuration: 0.35
-  playerSpeedMultiplierWhileGrowing: 0.55
+  playerSlow: 0.55

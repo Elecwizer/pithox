@@ -34,6 +34,9 @@
 # Visual Studio cache directory
 .vs/
 
+# Claude Code worktrees and local state
+.claude/
+
 # Gradle cache directory
 .gradle/
 

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Pithox.Player
@@ -11,6 +12,7 @@ namespace Pithox.Player
 
         [SerializeField] Transform pot;
         [SerializeField] GameObject carriedTombVisual;
+        [SerializeField] PlayerStats stats;
 
         [Header("SFX")]
         [SerializeField] AudioSource sfxSource;
@@ -20,6 +22,11 @@ namespace Pithox.Player
         [SerializeField] float placeVolume = 4f;
 
         bool hasTomb;
+
+        public bool IsCarrying => hasTomb;
+
+        public static event Action OnTombPickedUp;
+        public static event Action OnTombPlaced;
 
         void Start()
         {
@@ -53,9 +60,11 @@ namespace Pithox.Player
 
         void TryPickUpTomb()
         {
+            float effectiveRange = pickupRange + (stats != null ? stats.PickupRangeBonus : 0f);
+
             Collider[] hits = Physics.OverlapSphere(
                 transform.position,
-                pickupRange,
+                effectiveRange,
                 ~0,
                 QueryTriggerInteraction.Collide
             );
@@ -94,6 +103,8 @@ namespace Pithox.Player
             PlaySfx(pickupSfx, pickupVolume);
 
             Destroy(closestTomb.gameObject);
+
+            OnTombPickedUp?.Invoke();
         }
 
         void TryPlaceInPot()
@@ -119,7 +130,7 @@ namespace Pithox.Player
 
             PlaySfx(placeSfx, placeVolume);
 
-            Debug.Log("Tomb collected");
+            OnTombPlaced?.Invoke();
         }
 
         void PlaySfx(AudioClip clip, float volume)
