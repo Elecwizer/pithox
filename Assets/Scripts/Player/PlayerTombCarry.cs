@@ -5,7 +5,7 @@ namespace Pithox.Player
 {
     public class PlayerTombCarry : MonoBehaviour
     {
-        [SerializeField] KeyCode pickupKey = KeyCode.E;
+        [SerializeField] KeyCode pickupKey = KeyCode.Space;
         [SerializeField] float pickupRange = 2f;
         [SerializeField] float potRange = 3f;
         [SerializeField] string tombTag = "Tomb";
@@ -28,6 +28,12 @@ namespace Pithox.Player
         public static event Action OnTombPickedUp;
         public static event Action OnTombPlaced;
 
+        void Awake()
+        {
+            if (stats == null)
+                stats = GetComponent<PlayerStats>();
+        }
+
         void Start()
         {
             if (carriedTombVisual != null)
@@ -49,9 +55,12 @@ namespace Pithox.Player
 
         void Update()
         {
-            if (!Input.GetKeyDown(pickupKey))
-                return;
+            if (Input.GetKeyDown(pickupKey))
+                TryUseTomb();
+        }
 
+        public void TryUseTomb()
+        {
             if (hasTomb)
                 TryPlaceInPot();
             else
@@ -129,6 +138,8 @@ namespace Pithox.Player
                 carriedTombVisual.SetActive(false);
 
             PlaySfx(placeSfx, placeVolume);
+
+            Debug.Log("Tomb collected");
 
             OnTombPlaced?.Invoke();
         }
