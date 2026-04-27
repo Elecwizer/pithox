@@ -78,3 +78,10 @@ This is a **prototype / vertical slice**, so some features are incomplete:
 1. Download the game files
 2. Extract the `.zip` file
 3. Use Unity version 6000.4.4f1
+
+# Current Controls
+- Space to attack with basic attack
+- Passive skills that you learn are activated automatically periodically
+- E to collect tombstones that drop from killing monsters
+- E next to the pot to get points
+- When you reach target points for each level you will get enhancements options
