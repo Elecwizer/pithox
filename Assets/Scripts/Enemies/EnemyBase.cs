@@ -1,36 +1,60 @@
 using Pithox.Combat;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace Pithox.Enemies
 {
+    [RequireComponent(typeof(NavMeshAgent))]
     public class EnemyBase : MonoBehaviour, IDamageable
     {
         [Header("Core Stats")]
         [SerializeField] protected float maxHealth = 20f;
         [SerializeField] protected float moveSpeed = 3f;
-        [SerializeField] protected float stopDistance = 1f;
+        [SerializeField] protected float stopDistance = 1.4f;
+        [SerializeField] protected float repathThreshold = 0.5f;
 
         [Header("Touch Damage")]
         [SerializeField] protected float touchDamage = 5f;
         [SerializeField] protected float touchDamageInterval = 0.5f;
         [SerializeField] protected float touchRange = 1.25f;
 
+        [Header("Hit Reaction")]
+        [SerializeField] float knockbackDistance = 0.4f;
+
         [Header("Death")]
         [SerializeField] GameObject tombPrefab;
         [SerializeField] AudioClip defaultDeathSfx;
         [SerializeField] AudioClip uniqueDeathSfx;
         [SerializeField] float deathSfxVolume = 1f;
+        [SerializeField] float deathCameraShake = 0.05f;
 
         [SerializeField] protected string playerTag = "Player";
 
         protected Transform playerTarget;
+        protected NavMeshAgent agent;
+        HitFlash hitFlash;
         float currentHealth;
         float nextTouchDamageTime;
         bool isDead;
+        Vector3 lastDestination;
+        bool hasDestination;
 
         protected virtual void Awake()
         {
             currentHealth = maxHealth;
+            agent = GetComponent<NavMeshAgent>();
+            hitFlash = GetComponent<HitFlash>();
+
+            if (agent != null)
+            {
+                agent.speed = moveSpeed;
+                agent.stoppingDistance = stopDistance;
+                agent.updateRotation = false;
+                agent.acceleration = 16f;
+                agent.angularSpeed = 720f;
+                agent.autoBraking = true;
+                agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+            }
         }
 
         protected virtual void Start()
@@ -56,10 +80,31 @@ namespace Pithox.Enemies
                 return;
 
             currentHealth -= damageData.Amount;
+
+            if (hitFlash != null)
+                hitFlash.Flash();
+
+            Pithox.Visual.HitVFX.PlayHit(damageData.HitPoint, new Color(1f, 0.9f, 0.7f));
+
+            ApplyKnockback(damageData);
+
             if (currentHealth <= 0f)
             {
                 Die();
             }
+        }
+
+        void ApplyKnockback(DamageData damageData)
+        {
+            if (agent == null || !agent.isOnNavMesh || knockbackDistance <= 0f)
+                return;
+
+            Vector3 push = damageData.HitDirection;
+            push.y = 0f;
+            if (push.sqrMagnitude < 0.0001f)
+                return;
+
+            agent.Move(push.normalized * knockbackDistance);
         }
 
         protected virtual void Die()
@@ -68,6 +113,9 @@ namespace Pithox.Enemies
                 return;
 
             isDead = true;
+
+            SmoothMidCamera.Shake(deathCameraShake, 0.1f);
+            Pithox.Visual.HitVFX.PlayDeath(transform.position, new Color(1f, 0.6f, 0.3f));
 
             if (tombPrefab != null)
             {
@@ -96,19 +144,21 @@ namespace Pithox.Enemies
 
         protected virtual void TickMovement()
         {
-            Vector3 toPlayer = playerTarget.position - transform.position;
-            toPlayer.y = 0f;
-
-            float sqrDistance = toPlayer.sqrMagnitude;
-            if (sqrDistance <= stopDistance * stopDistance)
+            if (agent == null || !agent.isOnNavMesh)
                 return;
 
-            if (toPlayer.sqrMagnitude > 0.001f)
+            Vector3 target = playerTarget.position;
+            if (!hasDestination || (target - lastDestination).sqrMagnitude > repathThreshold * repathThreshold)
             {
-                Vector3 moveDirection = toPlayer.normalized;
-                transform.position += moveDirection * moveSpeed * Time.deltaTime;
-                transform.forward = moveDirection;
+                agent.SetDestination(target);
+                lastDestination = target;
+                hasDestination = true;
             }
+
+            Vector3 velocity = agent.velocity;
+            velocity.y = 0f;
+            if (velocity.sqrMagnitude > 0.01f)
+                transform.forward = velocity.normalized;
         }
 
         protected virtual void TickTouchDamage()

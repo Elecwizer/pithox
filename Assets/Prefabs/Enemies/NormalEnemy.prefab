@@ -14,7 +14,9 @@ GameObject:
   - component: {fileID: 1760839729578129255}
   - component: {fileID: 6048675447056410017}
   - component: {fileID: -6753677188171869356}
-  m_Layer: 0
+  - component: {fileID: 444864705770606903}
+  - component: {fileID: 8535134308382358221}
+  m_Layer: 6
   m_Name: NormalEnemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -69,7 +71,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: dab96657a7a0d4c5bb022b6febe0e975, type: 2}
+  - {fileID: 2100000, guid: fcea6d165c8903347b227fb13970cb68, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -131,13 +133,16 @@ MonoBehaviour:
   maxHealth: 20
   moveSpeed: 3
   stopDistance: 1
+  repathThreshold: 0.5
   touchDamage: 5
   touchDamageInterval: 0.5
   touchRange: 1.25
+  knockbackDistance: 0.4
   tombPrefab: {fileID: 8516115980770912612, guid: 5abc4fc688aab68489d0812631e8c0d8, type: 3}
   defaultDeathSfx: {fileID: 8300000, guid: 937d9dd416640354c8cdd61ecb3503c3, type: 3}
   uniqueDeathSfx: {fileID: 0}
   deathSfxVolume: 1
+  deathCameraShake: 0.05
   playerTag: Player
 --- !u!54 &-6753677188171869356
 Rigidbody:
@@ -161,8 +166,44 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
-  m_Interpolate: 0
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 1
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!195 &444864705770606903
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 625766557668119747}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 1
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
+--- !u!114 &8535134308382358221
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 625766557668119747}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee5e7203254233043a5029daf59d5a02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Pithox.Combat.HitFlash
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  duration: 0.08
