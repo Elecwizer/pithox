@@ -9,6 +9,7 @@ namespace Pithox.Player
         [SerializeField] Transform visualRoot;
         [SerializeField] Camera mainCamera;
         [SerializeField] PlayerStats stats;
+        [SerializeField] Animator animator;
 
         [Header("Movement")]
         [SerializeField] float moveSpeed = 6f;
@@ -16,7 +17,7 @@ namespace Pithox.Player
         [SerializeField] float deceleration = 18f;
         [SerializeField] float turnAcceleration = 42f;
         [SerializeField] float externalDrag = 18f;
-        [SerializeField] bool cameraRelativeMovement = true;
+        [SerializeField] bool cameraRelativeMovement = false;
         [SerializeField] bool lockYToZero = true;
 
         [Header("Facing")]
@@ -77,6 +78,15 @@ namespace Pithox.Player
             if (visualRoot == null && transform.childCount > 0)
                 visualRoot = transform.GetChild(0);
 
+            if (animator == null)
+            {
+                if (visualRoot != null)
+                    animator = visualRoot.GetComponentInChildren<Animator>();
+
+                if (animator == null)
+                    animator = GetComponentInChildren<Animator>();
+            }
+
             if (sfxSource == null)
             {
                 sfxSource = GetComponent<AudioSource>();
@@ -112,13 +122,13 @@ namespace Pithox.Player
 
         Vector2 ReadMoveInput()
         {
-            float horizontal = Input.GetAxisRaw("Horizontal");
-            float vertical = Input.GetAxisRaw("Vertical");
+            float horizontal = 0f;
+            float vertical = 0f;
 
-            if (Input.GetKey(KeyCode.A)) horizontal -= 1f;
-            if (Input.GetKey(KeyCode.D)) horizontal += 1f;
-            if (Input.GetKey(KeyCode.S)) vertical -= 1f;
             if (Input.GetKey(KeyCode.W)) vertical += 1f;
+            if (Input.GetKey(KeyCode.S)) vertical -= 1f;
+            if (Input.GetKey(KeyCode.D)) horizontal += 1f;
+            if (Input.GetKey(KeyCode.A)) horizontal -= 1f;
 
             return Vector2.ClampMagnitude(new Vector2(horizontal, vertical), 1f);
         }
@@ -178,6 +188,9 @@ namespace Pithox.Player
 
             Vector3 finalVelocity = currentHorizontalVelocity + dashVelocity + externalVelocity;
             characterController.Move(finalVelocity * dt);
+
+            if (animator != null)
+                animator.SetFloat("MoveSpeed", currentHorizontalVelocity.magnitude, 0.08f, dt);
         }
 
         void UpdateDash(float dt, Vector3 worldMoveDirection)
@@ -327,7 +340,6 @@ namespace Pithox.Player
 
             sfxSource.pitch = pitch;
             sfxSource.PlayOneShot(clip, volume);
-            sfxSource.pitch = 1f;
         }
 
         bool TryGetMouseWorldPosition(out Vector3 position)
@@ -387,6 +399,18 @@ namespace Pithox.Player
                 return;
 
             externalVelocity += direction.normalized * strength;
+        }
+
+        public void PlayTakeDamageAnimation()
+        {
+            if (animator != null)
+                animator.SetTrigger("TakeDamage");
+        }
+
+        public void PlayDieAnimation()
+        {
+            if (animator != null)
+                animator.SetTrigger("Die");
         }
 
         public Vector3 GetForwardDirection()

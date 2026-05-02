@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: f37f6c83a49cb524c8e0802a60ad1596
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 625f186215c104763be7675aa2d941aa, type: 3}
+AssetOrigin:
+  serializedVersion: 1
+  productId: 324389
+  packageName: Low Poly Horror Forest
+  packageVersion: 1.2
+  assetPath: Assets/MR POLY/Low Poly Horror Forest/Materials/URP/Shader/Grass/Grass
+    (Simple-URP).shadergraph
+  uploadId: 776042

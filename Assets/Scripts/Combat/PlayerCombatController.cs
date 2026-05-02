@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
@@ -12,6 +13,7 @@ namespace Pithox.Combat
         [SerializeField] PlayerTombCarry tombCarry;
         [SerializeField] Transform attackPoint;
         [SerializeField] AudioSource sfxSource;
+        [SerializeField] Animator animator;
         [SerializeField] LayerMask enemyMask = ~0;
 
         [Header("Input")]
@@ -23,8 +25,8 @@ namespace Pithox.Combat
         [SerializeField] AttackArcPreview attackArcVisual;
         [SerializeField] bool showAttackArc = true;
         [SerializeField] float attackArcShowTime = 0.12f;
-        [SerializeField] Color lightArcColor = new Color(1f, 0.75f, 0.1f, 0.35f);
-        [SerializeField] Color heavyArcColor = new Color(1f, 0.2f, 0.1f, 0.4f);
+        [SerializeField] Color lightArcColor = new Color(1f, 0.75f, 0.1f, 0.8f);
+        [SerializeField] Color heavyArcColor = new Color(1f, 0.2f, 0.1f, 0.85f);
 
         [Header("General MUL")]
         [SerializeField] float generalDamageMUL = 1f;
@@ -33,6 +35,7 @@ namespace Pithox.Combat
         [SerializeField] float slashRangeMUL = 1f;
         [SerializeField] float slashEnemyKnockbackMUL = 1f;
         [SerializeField] float slashPlayerRecoilMUL = 1f;
+        [SerializeField] float slashHitDelayMUL = 1f;
 
         [Header("Light Slash Base")]
         [SerializeField] float baseLightDamage = 8f;
@@ -41,6 +44,7 @@ namespace Pithox.Combat
         [SerializeField] float baseLightCooldown = 0.6f;
         [SerializeField] float baseLightEnemyKnockback = 0.45f;
         [SerializeField] float baseLightPlayerRecoil = 4f;
+        [SerializeField] float baseLightHitDelay = 0.2f;
 
         [Header("Light Slash MUL")]
         [SerializeField] float lightDamageMUL = 1f;
@@ -48,6 +52,7 @@ namespace Pithox.Combat
         [SerializeField] float lightCooldownMUL = 1f;
         [SerializeField] float lightEnemyKnockbackMUL = 1f;
         [SerializeField] float lightPlayerRecoilMUL = 1f;
+        [SerializeField] float lightHitDelayMUL = 1f;
 
         [Header("Heavy Slash Base")]
         [SerializeField] float baseHeavyDamage = 16f;
@@ -56,6 +61,7 @@ namespace Pithox.Combat
         [SerializeField] float baseHeavyCooldown = 1.5f;
         [SerializeField] float baseHeavyEnemyKnockback = 1.1f;
         [SerializeField] float baseHeavyPlayerRecoil = 7f;
+        [SerializeField] float baseHeavyHitDelay = 0.35f;
 
         [Header("Heavy Slash MUL")]
         [SerializeField] float heavyDamageMUL = 1f;
@@ -63,10 +69,12 @@ namespace Pithox.Combat
         [SerializeField] float heavyCooldownMUL = 1f;
         [SerializeField] float heavyEnemyKnockbackMUL = 1f;
         [SerializeField] float heavyPlayerRecoilMUL = 1f;
+        [SerializeField] float heavyHitDelayMUL = 1f;
 
         [Header("Attack Feel")]
         [SerializeField] float faceMouseTime = 0.16f;
         [SerializeField] bool recoilOnlyOnHit = true;
+        [SerializeField] bool playSlashSfxOnHitRegister = true;
 
         [Header("Light SFX")]
         [SerializeField] AudioClip[] lightSlashSfx;
@@ -81,6 +89,7 @@ namespace Pithox.Combat
         [SerializeField] float pitchMax = 1.1f;
 
         float slashCooldownTimer;
+        bool slashIsPending;
         readonly HashSet<Component> hitTargets = new();
 
         void Awake()
@@ -93,6 +102,9 @@ namespace Pithox.Combat
 
             if (attackPoint == null)
                 attackPoint = transform;
+
+            if (animator == null)
+                animator = GetComponentInChildren<Animator>();
 
             if (sfxSource == null)
             {
@@ -125,22 +137,24 @@ namespace Pithox.Combat
             if (!CanSlash())
                 return;
 
-            Vector3 slashDirection = GetSlashDirection();
+            if (animator != null)
+                animator.SetTrigger("LightAttack");
 
             float damage = baseLightDamage * generalDamageMUL * slashDamageMUL * lightDamageMUL;
             float range = baseLightRange * slashRangeMUL * lightRangeMUL;
             float cooldown = baseLightCooldown * slashCooldownMUL * lightCooldownMUL;
             float enemyKnockback = baseLightEnemyKnockback * slashEnemyKnockbackMUL * lightEnemyKnockbackMUL;
             float playerRecoil = baseLightPlayerRecoil * slashPlayerRecoilMUL * lightPlayerRecoilMUL;
+            float hitDelay = baseLightHitDelay * slashHitDelayMUL * lightHitDelayMUL;
 
             DoSlash(
-                slashDirection,
                 damage,
                 range,
                 baseLightArcDegrees,
                 enemyKnockback,
                 playerRecoil,
                 cooldown,
+                hitDelay,
                 lightSlashSfx,
                 lightSlashVolume,
                 lightArcColor
@@ -152,22 +166,24 @@ namespace Pithox.Combat
             if (!CanSlash())
                 return;
 
-            Vector3 slashDirection = GetSlashDirection();
+            if (animator != null)
+                animator.SetTrigger("HeavyAttack");
 
             float damage = baseHeavyDamage * generalDamageMUL * slashDamageMUL * heavyDamageMUL;
             float range = baseHeavyRange * slashRangeMUL * heavyRangeMUL;
             float cooldown = baseHeavyCooldown * slashCooldownMUL * heavyCooldownMUL;
             float enemyKnockback = baseHeavyEnemyKnockback * slashEnemyKnockbackMUL * heavyEnemyKnockbackMUL;
             float playerRecoil = baseHeavyPlayerRecoil * slashPlayerRecoilMUL * heavyPlayerRecoilMUL;
+            float hitDelay = baseHeavyHitDelay * slashHitDelayMUL * heavyHitDelayMUL;
 
             DoSlash(
-                slashDirection,
                 damage,
                 range,
                 baseHeavyArcDegrees,
                 enemyKnockback,
                 playerRecoil,
                 cooldown,
+                hitDelay,
                 heavySlashSfx,
                 heavySlashVolume,
                 heavyArcColor
@@ -176,6 +192,9 @@ namespace Pithox.Combat
 
         bool CanSlash()
         {
+            if (slashIsPending)
+                return false;
+
             if (slashCooldownTimer > 0f)
                 return false;
 
@@ -186,19 +205,56 @@ namespace Pithox.Combat
         }
 
         void DoSlash(
-            Vector3 slashDirection,
             float damage,
             float range,
             float arcDegrees,
             float enemyKnockback,
             float playerRecoil,
             float cooldown,
+            float hitDelay,
             AudioClip[] sfxClips,
             float sfxVolume,
             Color arcColor
         )
         {
             slashCooldownTimer = Mathf.Max(0.01f, cooldown);
+            slashIsPending = true;
+
+            if (playerController != null)
+                playerController.FaceMouseFor(Mathf.Max(faceMouseTime, hitDelay + 0.05f));
+
+            if (!playSlashSfxOnHitRegister)
+                PlayRandomSfx(sfxClips, sfxVolume);
+
+            StartCoroutine(DelayedSlashHit(
+                damage,
+                range,
+                arcDegrees,
+                enemyKnockback,
+                playerRecoil,
+                Mathf.Max(0f, hitDelay),
+                sfxClips,
+                sfxVolume,
+                arcColor
+            ));
+        }
+
+        IEnumerator DelayedSlashHit(
+            float damage,
+            float range,
+            float arcDegrees,
+            float enemyKnockback,
+            float playerRecoil,
+            float hitDelay,
+            AudioClip[] sfxClips,
+            float sfxVolume,
+            Color arcColor
+        )
+        {
+            if (hitDelay > 0f)
+                yield return new WaitForSeconds(hitDelay);
+
+            Vector3 slashDirection = GetSlashDirection();
 
             Vector3 origin = attackPoint != null ? attackPoint.position : transform.position;
             origin.y = 0f;
@@ -206,8 +262,8 @@ namespace Pithox.Combat
             if (showAttackArc && attackArcVisual != null)
                 attackArcVisual.Show(origin, slashDirection, range, arcDegrees, attackArcShowTime, arcColor);
 
-            if (playerController != null)
-                playerController.FaceMouseFor(faceMouseTime);
+            if (playSlashSfxOnHitRegister)
+                PlayRandomSfx(sfxClips, sfxVolume);
 
             int hitCount = HitEnemiesInArc(slashDirection, damage, range, arcDegrees, enemyKnockback);
 
@@ -217,7 +273,7 @@ namespace Pithox.Combat
                     playerController.AddImpulse(-slashDirection, playerRecoil);
             }
 
-            PlayRandomSfx(sfxClips, sfxVolume);
+            slashIsPending = false;
         }
 
         int HitEnemiesInArc(Vector3 slashDirection, float damage, float range, float arcDegrees, float enemyKnockback)
@@ -367,7 +423,6 @@ namespace Pithox.Combat
 
             sfxSource.pitch = Random.Range(pitchMin, pitchMax);
             sfxSource.PlayOneShot(clip, volume);
-            sfxSource.pitch = 1f;
         }
 
         public void SetGeneralDamageMUL(float value)
@@ -398,6 +453,11 @@ namespace Pithox.Combat
         public void SetSlashPlayerRecoilMUL(float value)
         {
             slashPlayerRecoilMUL = Mathf.Max(0f, value);
+        }
+
+        public void SetSlashHitDelayMUL(float value)
+        {
+            slashHitDelayMUL = Mathf.Max(0f, value);
         }
 
         void OnDrawGizmosSelected()
