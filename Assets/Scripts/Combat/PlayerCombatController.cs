@@ -28,6 +28,11 @@ namespace Pithox.Combat
         [SerializeField] Color lightArcColor = new Color(1f, 0.75f, 0.1f, 0.8f);
         [SerializeField] Color heavyArcColor = new Color(1f, 0.2f, 0.1f, 0.85f);
 
+        [Header("Slash VFX")]
+        [SerializeField] ParticleSystem lightSlashVfx;
+        [SerializeField] ParticleSystem heavySlashVfx;
+        [SerializeField] bool playSlashVfxOnHitRegister = true;
+
         [Header("General MUL")]
         [SerializeField] float generalDamageMUL = 1f;
         [SerializeField] float slashDamageMUL = 1f;
@@ -116,6 +121,7 @@ namespace Pithox.Combat
 
             sfxSource.playOnAwake = false;
             sfxSource.spatialBlend = 0f;
+            sfxSource.dopplerLevel = 0f;
             sfxSource.volume = 1f;
             sfxSource.mute = false;
         }
@@ -157,6 +163,7 @@ namespace Pithox.Combat
                 hitDelay,
                 lightSlashSfx,
                 lightSlashVolume,
+                lightSlashVfx,
                 lightArcColor
             );
         }
@@ -186,6 +193,7 @@ namespace Pithox.Combat
                 hitDelay,
                 heavySlashSfx,
                 heavySlashVolume,
+                heavySlashVfx,
                 heavyArcColor
             );
         }
@@ -214,6 +222,7 @@ namespace Pithox.Combat
             float hitDelay,
             AudioClip[] sfxClips,
             float sfxVolume,
+            ParticleSystem slashVfx,
             Color arcColor
         )
         {
@@ -226,6 +235,9 @@ namespace Pithox.Combat
             if (!playSlashSfxOnHitRegister)
                 PlayRandomSfx(sfxClips, sfxVolume);
 
+            if (!playSlashVfxOnHitRegister)
+                PlayVfx(slashVfx);
+
             StartCoroutine(DelayedSlashHit(
                 damage,
                 range,
@@ -235,6 +247,7 @@ namespace Pithox.Combat
                 Mathf.Max(0f, hitDelay),
                 sfxClips,
                 sfxVolume,
+                slashVfx,
                 arcColor
             ));
         }
@@ -248,6 +261,7 @@ namespace Pithox.Combat
             float hitDelay,
             AudioClip[] sfxClips,
             float sfxVolume,
+            ParticleSystem slashVfx,
             Color arcColor
         )
         {
@@ -264,6 +278,9 @@ namespace Pithox.Combat
 
             if (playSlashSfxOnHitRegister)
                 PlayRandomSfx(sfxClips, sfxVolume);
+
+            if (playSlashVfxOnHitRegister)
+                PlayVfx(slashVfx);
 
             int hitCount = HitEnemiesInArc(slashDirection, damage, range, arcDegrees, enemyKnockback);
 
@@ -423,6 +440,16 @@ namespace Pithox.Combat
 
             sfxSource.pitch = Random.Range(pitchMin, pitchMax);
             sfxSource.PlayOneShot(clip, volume);
+            sfxSource.pitch = 1f;
+        }
+
+        void PlayVfx(ParticleSystem vfx)
+        {
+            if (vfx == null)
+                return;
+
+            vfx.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            vfx.Play(true);
         }
 
         public void SetGeneralDamageMUL(float value)
