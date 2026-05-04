@@ -4561,9 +4561,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pithox.Enemies.SpawnManager
   enemies:
   - enemyPrefab: {fileID: 8142156003, guid: f40775781d5209c2a0e03e2b0bb1343d, type: 3}
-    weight: 1
+    weight: 0
   - enemyPrefab: {fileID: 8142156003, guid: f02a09e4050e4a18e2a934313d42fc03, type: 3}
-    weight: 1
+    weight: 0
+  - enemyPrefab: {fileID: 9200155003, guid: b9c8d7e6f5a4132435465768798a0b12, type: 3}
+    weight: 0
   spawnPoints:
   - {fileID: 1151831571}
   - {fileID: 917754572}
@@ -6310,6 +6312,63 @@ Camera:
   m_CorrespondingSourceObject: {fileID: 7330355602784189381, guid: b35ab4759d29b5d4b90c7081c15d5fb2, type: 3}
   m_PrefabInstance: {fileID: 6765870620260300076}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &2097565617
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 7108305169455263047, guid: b9c8d7e6f5a4132435465768798a0b12, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7108305169455263047, guid: b9c8d7e6f5a4132435465768798a0b12, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7108305169455263047, guid: b9c8d7e6f5a4132435465768798a0b12, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 9.45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7108305169455263047, guid: b9c8d7e6f5a4132435465768798a0b12, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7108305169455263047, guid: b9c8d7e6f5a4132435465768798a0b12, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7108305169455263047, guid: b9c8d7e6f5a4132435465768798a0b12, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7108305169455263047, guid: b9c8d7e6f5a4132435465768798a0b12, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7108305169455263047, guid: b9c8d7e6f5a4132435465768798a0b12, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7108305169455263047, guid: b9c8d7e6f5a4132435465768798a0b12, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7108305169455263047, guid: b9c8d7e6f5a4132435465768798a0b12, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7633061849612974077, guid: b9c8d7e6f5a4132435465768798a0b12, type: 3}
+      propertyPath: m_Name
+      value: Game_DarkWizard_Enemy
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: b9c8d7e6f5a4132435465768798a0b12, type: 3}
 --- !u!4 &2146818646 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3276557518224944180, guid: 78120e71ed8711641bf34d4cd1f04ae8, type: 3}
@@ -6714,3 +6773,4 @@ SceneRoots:
   - {fileID: 1283931602}
   - {fileID: 177171441}
   - {fileID: 1756722023}
+  - {fileID: 2097565617}

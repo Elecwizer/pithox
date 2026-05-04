@@ -97,7 +97,7 @@ namespace Pithox.Enemies
             if (animator == null)
                 animator = GetComponent<Animator>();
 
-            chaseWeavePhase = (GetInstanceID() & 1023) * 0.01f;
+            chaseWeavePhase = (gameObject.GetEntityId().GetHashCode() & 1023) * 0.01f;
         }
 
         protected override void Start()
