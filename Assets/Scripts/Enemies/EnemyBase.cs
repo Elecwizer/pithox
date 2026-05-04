@@ -14,6 +14,7 @@ namespace Pithox.Enemies
         [SerializeField] protected float repathThreshold = 0.5f;
 
         [Header("Touch Damage")]
+        [SerializeField] protected bool useTouchDamage = true;
         [SerializeField] protected float touchDamage = 5f;
         [SerializeField] protected float touchDamageInterval = 0.5f;
         [SerializeField] protected float touchRange = 1.25f;
@@ -35,8 +36,10 @@ namespace Pithox.Enemies
         HitFlash hitFlash;
         float currentHealth;
         float nextTouchDamageTime;
-        bool isDead;
-        Vector3 lastDestination;
+        protected bool IsDead => isDead;
+        protected bool isDead;
+        Vector3 lastRepathAnchor;
+        float lastChasePathRefreshTime;
         bool hasDestination;
 
         protected virtual void Awake()
@@ -64,6 +67,9 @@ namespace Pithox.Enemies
 
         protected virtual void Update()
         {
+            if (isDead)
+                return;
+
             if (playerTarget == null)
             {
                 FindPlayerTarget();
@@ -92,7 +98,13 @@ namespace Pithox.Enemies
             {
                 Die();
             }
+            else
+            {
+                OnAfterDamageApplied(damageData);
+            }
         }
+
+        protected virtual void OnAfterDamageApplied(DamageData damageData) { }
 
         void ApplyKnockback(DamageData damageData)
         {
@@ -113,16 +125,34 @@ namespace Pithox.Enemies
                 return;
 
             isDead = true;
+            RunDeathPresentation();
+            DestroyEnemyGameObject();
+        }
 
+        protected void RunDeathPresentation()
+        {
+            PlayDeathCameraAndGlobalVfx();
+            SpawnDeathTomb();
+            PlayDeathSounds();
+        }
+
+        protected void PlayDeathCameraAndGlobalVfx()
+        {
             SmoothMidCamera.Shake(deathCameraShake, 0.1f);
             Pithox.Visual.HitVFX.PlayDeath(transform.position, new Color(1f, 0.6f, 0.3f));
+        }
 
-            if (tombPrefab != null)
-            {
-                Vector3 tombPosition = new Vector3(transform.position.x, 0f, transform.position.z);
-                Instantiate(tombPrefab, tombPosition, tombPrefab.transform.rotation);
-            }
+        protected void SpawnDeathTomb()
+        {
+            if (tombPrefab == null)
+                return;
 
+            Vector3 tombPosition = new Vector3(transform.position.x, 0f, transform.position.z);
+            Instantiate(tombPrefab, tombPosition, tombPrefab.transform.rotation);
+        }
+
+        protected void PlayDeathSounds()
+        {
             AudioClip clip = uniqueDeathSfx != null ? uniqueDeathSfx : defaultDeathSfx;
 
             if (clip != null)
@@ -138,20 +168,30 @@ namespace Pithox.Enemies
 
                 Destroy(sfxObject, clip.length);
             }
+        }
 
+        protected virtual void DestroyEnemyGameObject()
+        {
             Destroy(gameObject);
         }
 
         protected virtual void TickMovement()
         {
-            if (agent == null || !agent.isOnNavMesh)
+            if (agent == null || !agent.isOnNavMesh || playerTarget == null)
                 return;
 
-            Vector3 target = playerTarget.position;
-            if (!hasDestination || (target - lastDestination).sqrMagnitude > repathThreshold * repathThreshold)
+            Vector3 anchor = GetChaseAnchor();
+            Vector3 target = GetChaseDestination();
+            float thr2 = repathThreshold * repathThreshold;
+            bool anchorMoved = (anchor - lastRepathAnchor).sqrMagnitude > thr2;
+            float refresh = ChasePathRefreshSeconds;
+            bool timedRefresh = refresh > 0f && (Time.time - lastChasePathRefreshTime >= refresh);
+
+            if (!hasDestination || anchorMoved || timedRefresh)
             {
                 agent.SetDestination(target);
-                lastDestination = target;
+                lastRepathAnchor = anchor;
+                lastChasePathRefreshTime = Time.time;
                 hasDestination = true;
             }
 
@@ -161,8 +201,30 @@ namespace Pithox.Enemies
                 transform.forward = velocity.normalized;
         }
 
+        protected virtual Vector3 GetChaseDestination()
+        {
+            return playerTarget != null ? playerTarget.position : transform.position;
+        }
+
+        /// <summary>Used for repath gating (player motion). Offsets from <see cref="GetChaseDestination"/> are applied without forcing a new path every frame.</summary>
+        protected virtual Vector3 GetChaseAnchor()
+        {
+            return playerTarget != null ? playerTarget.position : transform.position;
+        }
+
+        /// <summary>When &gt; 0, chase destination is refreshed on this interval so lateral weave / strafe targets update without spamming SetDestination every frame.</summary>
+        protected virtual float ChasePathRefreshSeconds => 0f;
+
+        protected void InvalidateMovementDestination()
+        {
+            hasDestination = false;
+        }
+
         protected virtual void TickTouchDamage()
         {
+            if (!useTouchDamage)
+                return;
+
             if (Time.time < nextTouchDamageTime)
                 return;
 

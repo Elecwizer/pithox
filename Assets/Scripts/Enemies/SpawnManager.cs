@@ -46,9 +46,7 @@ namespace Pithox.Enemies
             CleanupDeadEnemies();
 
             if (ShouldRampDifficulty())
-            {
                 RampDifficulty();
-            }
 
             if (!CanSpawnNow())
                 return;
@@ -100,9 +98,7 @@ namespace Pithox.Enemies
             for (int i = 0; i < enemies.Count; i++)
             {
                 if (enemies[i] != null && enemies[i].enemyPrefab != null)
-                {
                     totalWeight += Mathf.Max(0, enemies[i].weight);
-                }
             }
 
             if (totalWeight <= 0)
@@ -119,9 +115,7 @@ namespace Pithox.Enemies
 
                 cumulative += Mathf.Max(0, entry.weight);
                 if (roll < cumulative)
-                {
                     return entry.enemyPrefab;
-                }
             }
 
             return enemies[0].enemyPrefab;
@@ -138,9 +132,7 @@ namespace Pithox.Enemies
             for (int i = aliveEnemies.Count - 1; i >= 0; i--)
             {
                 if (aliveEnemies[i] == null)
-                {
                     aliveEnemies.RemoveAt(i);
-                }
             }
         }
     }

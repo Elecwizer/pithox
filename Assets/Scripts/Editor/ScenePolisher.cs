@@ -23,7 +23,6 @@ namespace Pithox.EditorTools
 
             Materials mats = GenerateAllMaterials();
 
-            ApplyEnemyPrefabs(mats);
             ApplySkillPrefabs(mats);
             ApplyPotPrefab(mats);
             ApplyTombPrefab(mats);
@@ -46,7 +45,7 @@ namespace Pithox.EditorTools
 
         struct Materials
         {
-            public Material Player, NormalEnemy, FastEnemy, ProjectileEnemy;
+            public Material Player;
             public Material Pot, PotLiquid, Tomb, Floor, Pillar;
             public Material Slash, Beam, Orbit, Pulse;
         }
@@ -56,9 +55,6 @@ namespace Pithox.EditorTools
             return new Materials
             {
                 Player = MakeMat("mat_player", new Color(0.12f, 0.45f, 0.55f), new Color(0.3f, 0.8f, 1f) * 0.5f, 0.5f),
-                NormalEnemy = MakeMat("mat_normal_enemy", new Color(0.5f, 0.1f, 0.1f), new Color(1f, 0.2f, 0.2f) * 0.4f, 0.3f),
-                FastEnemy = MakeMat("mat_fast_enemy", new Color(0.6f, 0.5f, 0.1f), new Color(1f, 0.9f, 0.2f) * 0.6f, 0.3f),
-                ProjectileEnemy = MakeMat("mat_projectile_enemy", new Color(0.4f, 0.15f, 0.5f), new Color(0.8f, 0.3f, 1f) * 0.5f, 0.3f),
                 Pot = MakeMat("mat_pot", new Color(0.15f, 0.13f, 0.15f), Color.black, 0.4f),
                 PotLiquid = MakeMat("mat_pot_liquid", new Color(0.35f, 0.1f, 0.5f), new Color(0.8f, 0.2f, 1f) * 1.2f, 0.7f),
                 Tomb = MakeMat("mat_tomb", new Color(0.6f, 0.5f, 0.2f), new Color(1f, 0.9f, 0.4f) * 0.4f, 0.3f),
@@ -107,38 +103,6 @@ namespace Pithox.EditorTools
 
             EditorUtility.SetDirty(m);
             return m;
-        }
-
-        static void ApplyEnemyPrefabs(Materials mats)
-        {
-            ApplyPrefabRigidbodyAndMaterial("NormalEnemy", mats.NormalEnemy);
-            ApplyPrefabRigidbodyAndMaterial("FastEnemy", mats.FastEnemy);
-            ApplyPrefabRigidbodyAndMaterial("ProjectileEnemy", mats.ProjectileEnemy);
-        }
-
-        static void ApplyPrefabRigidbodyAndMaterial(string prefabName, Material material)
-        {
-            GameObject prefab = LoadPrefabByName(prefabName);
-            if (prefab == null) return;
-            string path = AssetDatabase.GetAssetPath(prefab);
-            GameObject root = PrefabUtility.LoadPrefabContents(path);
-
-            Rigidbody rb = root.GetComponent<Rigidbody>();
-            if (rb != null)
-            {
-                rb.isKinematic = true;
-                rb.useGravity = false;
-                rb.interpolation = RigidbodyInterpolation.Interpolate;
-                rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
-            }
-
-            if (root.GetComponent<HitFlash>() == null)
-                root.AddComponent<HitFlash>();
-
-            ApplyMaterialRecursive(root.transform, material);
-
-            PrefabUtility.SaveAsPrefabAsset(root, path);
-            PrefabUtility.UnloadPrefabContents(root);
         }
 
         static void ApplySkillPrefabs(Materials mats)
@@ -283,7 +247,7 @@ namespace Pithox.EditorTools
         static void EnsureLightingAndFog()
         {
             Light dl = null;
-            foreach (Light l in Object.FindObjectsByType<Light>(FindObjectsSortMode.None))
+            foreach (Light l in Object.FindObjectsByType<Light>(FindObjectsInactive.Exclude))
                 if (l.type == LightType.Directional) { dl = l; break; }
 
             if (dl == null)
@@ -330,7 +294,7 @@ namespace Pithox.EditorTools
                 floor.name = "PithoxFloor";
                 floor.transform.position = Vector3.zero;
                 floor.transform.localScale = new Vector3(8f, 1f, 8f);
-                GameObjectUtility.SetStaticEditorFlags(floor, StaticEditorFlags.NavigationStatic | StaticEditorFlags.ContributeGI);
+                GameObjectUtility.SetStaticEditorFlags(floor, StaticEditorFlags.ContributeGI);
             }
             floor.GetComponent<Renderer>().sharedMaterial = mats.Floor;
 
@@ -352,7 +316,7 @@ namespace Pithox.EditorTools
                     p.transform.localPosition = new Vector3(Mathf.Cos(a) * radius, 2f, Mathf.Sin(a) * radius);
                     p.transform.localScale = new Vector3(1.2f, 4f, 1.2f);
                     p.GetComponent<Renderer>().sharedMaterial = mats.Pillar;
-                    GameObjectUtility.SetStaticEditorFlags(p, StaticEditorFlags.NavigationStatic | StaticEditorFlags.ContributeGI);
+                    GameObjectUtility.SetStaticEditorFlags(p, StaticEditorFlags.ContributeGI);
                 }
             }
 
@@ -391,7 +355,7 @@ namespace Pithox.EditorTools
 
         static void EnsureVfxSingleton()
         {
-            HitVFX existing = Object.FindFirstObjectByType<HitVFX>();
+            HitVFX existing = Object.FindAnyObjectByType<HitVFX>();
             if (existing != null) return;
 
             GameObject go = new GameObject("_VFX");

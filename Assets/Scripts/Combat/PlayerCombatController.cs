@@ -95,6 +95,7 @@ namespace Pithox.Combat
 
         float slashCooldownTimer;
         bool slashIsPending;
+        float pendingSlashRange;
         readonly HashSet<Component> hitTargets = new();
 
         void Awake()
@@ -228,6 +229,7 @@ namespace Pithox.Combat
         {
             slashCooldownTimer = Mathf.Max(0.01f, cooldown);
             slashIsPending = true;
+            pendingSlashRange = range;
 
             if (playerController != null)
                 playerController.FaceMouseFor(Mathf.Max(faceMouseTime, hitDelay + 0.05f));
@@ -346,6 +348,13 @@ namespace Pithox.Combat
                 {
                     toTarget = damageComponent.transform.position - origin;
                     toTarget.y = 0f;
+                }
+
+                if (toTarget.sqrMagnitude < 0.001f)
+                {
+                    Vector3 boundsCenter = hit.bounds.center;
+                    boundsCenter.y = 0f;
+                    toTarget = boundsCenter - origin;
                 }
 
                 if (toTarget.sqrMagnitude < 0.001f)
@@ -485,6 +494,21 @@ namespace Pithox.Combat
         public void SetSlashHitDelayMUL(float value)
         {
             slashHitDelayMUL = Mathf.Max(0f, value);
+        }
+
+        /// <summary>True from slash input until the delayed hit frame has finished (windup / active swing).</summary>
+        public bool IsSlashWindupPending => slashIsPending;
+
+        /// <summary>Range of the slash currently in flight (0 if none).</summary>
+        public float PendingSlashRange => slashIsPending ? pendingSlashRange : 0f;
+
+        /// <summary>World XZ aim direction for the pending slash. Zero if not in a slash.</summary>
+        public Vector3 GetPendingSlashFlatDirection()
+        {
+            if (!slashIsPending)
+                return Vector3.zero;
+
+            return GetSlashDirection();
         }
 
         void OnDrawGizmosSelected()

@@ -142,7 +142,7 @@ namespace Pithox.EditorTools
 
         static (Canvas, TMP_Text, TMP_Text, TMP_Text, Image, GameObject, Button[], TMP_Text[]) BuildOrFindUI()
         {
-            Canvas canvas = Object.FindFirstObjectByType<Canvas>();
+            Canvas canvas = Object.FindAnyObjectByType<Canvas>();
             if (canvas == null)
             {
                 GameObject canvasGO = new GameObject("HUDCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
@@ -155,7 +155,7 @@ namespace Pithox.EditorTools
                 scaler.matchWidthOrHeight = 0.5f;
             }
 
-            if (Object.FindFirstObjectByType<EventSystem>() == null)
+            if (Object.FindAnyObjectByType<EventSystem>() == null)
             {
                 GameObject es = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
                 Undo.RegisterCreatedObjectUndo(es, "Create EventSystem");
@@ -355,7 +355,7 @@ namespace Pithox.EditorTools
 
         static void EnsureNavMeshAgentOnEnemyPrefabs()
         {
-            string[] prefabs = { "FastEnemy", "NormalEnemy", "ProjectileEnemy" };
+            string[] prefabs = { "Game_Slime_All", "Game_Skeleton_All" };
             foreach (string p in prefabs)
             {
                 GameObject prefab = LoadPrefab(p);
