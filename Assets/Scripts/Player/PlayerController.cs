@@ -118,7 +118,7 @@ namespace Pithox.Player
             Vector2 moveInput = ReadMoveInput();
             Vector3 worldMoveDirection = ConvertInputToWorldDirection(moveInput);
 
-            UpdateAim(dt);
+            UpdateAim(dt, worldMoveDirection);
             UpdateDash(dt, worldMoveDirection);
             UpdateMovement(dt, worldMoveDirection);
             UpdateFacing(dt, worldMoveDirection);
@@ -151,6 +151,34 @@ namespace Pithox.Player
             camRight.Normalize();
 
             return (camRight * moveInput.x + camForward * moveInput.y).normalized;
+        }
+
+        void UpdateAim(float dt, Vector3 worldMoveDirection)
+        {
+            Vector2 aimStick = global::PlayerInputRouter.GetAimStick();
+
+            if (global::PlayerInputRouter.UsingController)
+            {
+                if (aimStick.magnitude > controllerAimDeadzone)
+                {
+                    Vector3 stickDirection = ConvertInputToWorldDirection(aimStick);
+
+                    if (stickDirection.sqrMagnitude > 0.001f)
+                        AimDirection = stickDirection.normalized;
+
+                    return;
+                }
+
+                if (worldMoveDirection.sqrMagnitude > 0.001f)
+                {
+                    AimDirection = worldMoveDirection.normalized;
+                    return;
+                }
+
+                return;
+            }
+
+            UpdateMouseAim(dt);
         }
 
         void UpdateMovement(float dt, Vector3 worldMoveDirection)
@@ -207,6 +235,9 @@ namespace Pithox.Player
             }
 
             if (!canDash)
+                return;
+
+            if (global::PlayerInputRouter.GameplayInputBlocked)
                 return;
 
             if (!Input.GetKeyDown(dashKey) && !global::PlayerInputRouter.GetDashDown())
@@ -271,23 +302,6 @@ namespace Pithox.Player
                 targetRotation,
                 rotationSpeed * dt
             );
-        }
-
-        void UpdateAim(float dt)
-        {
-            Vector2 aimStick = global::PlayerInputRouter.GetAimStick();
-
-            if (global::PlayerInputRouter.UsingController && aimStick.magnitude > controllerAimDeadzone)
-            {
-                Vector3 stickDirection = ConvertInputToWorldDirection(aimStick);
-
-                if (stickDirection.sqrMagnitude > 0.001f)
-                    AimDirection = stickDirection.normalized;
-
-                return;
-            }
-
-            UpdateMouseAim(dt);
         }
 
         void UpdateMouseAim(float dt)

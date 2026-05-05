@@ -1,5 +1,5 @@
-using System;
 using UnityEngine;
+using Pithox.Player;
 
 public class SmoothMidCamera : MonoBehaviour
 {
@@ -29,6 +29,8 @@ public class SmoothMidCamera : MonoBehaviour
     public float maxAimDistance = 7f;
     public float aimSmoothTime = 0.12f;
     public float controllerDeadzone = 0.25f;
+
+    [Header("Legacy Axis Names")]
     public string rightStickHorizontalAxis = "RightStickHorizontal";
     public string rightStickVerticalAxis = "RightStickVertical";
 
@@ -37,28 +39,27 @@ public class SmoothMidCamera : MonoBehaviour
     static SmoothMidCamera instance;
 
     Camera cam;
+    PlayerController playerController;
     Transform boss;
 
     Vector3 velocity;
     Vector3 shakeOffset;
     Vector3 smoothedAimPoint;
     Vector3 aimVelocity;
-    Vector3 lastMousePosition;
-    Vector2 lastControllerAim = Vector2.up;
 
     float shakeMagnitude;
     float shakeRemaining;
     float nextBossCheckTime;
 
     bool aimStarted;
-    bool mouseStarted;
-    bool usingController;
 
     void Awake()
     {
         instance = this;
         cam = GetComponent<Camera>();
-        lastMousePosition = Input.mousePosition;
+
+        if (player != null)
+            playerController = player.GetComponent<PlayerController>();
     }
 
     void OnDestroy()
@@ -81,7 +82,10 @@ public class SmoothMidCamera : MonoBehaviour
         if (player == null)
             return;
 
-        UpdateInputDevice();
+        if (playerController == null)
+            playerController = player.GetComponent<PlayerController>();
+
+        PlayerInputRouter.UpdateInputType();
         UpdateBossReference();
 
         Vector3 focusPoint = GetFocusPoint();
@@ -136,14 +140,22 @@ public class SmoothMidCamera : MonoBehaviour
     {
         point = Vector3.zero;
 
-        if (usingController)
+        if (PlayerInputRouter.UsingController)
         {
-            Vector2 stick = GetRightStick();
+            Vector2 stick = PlayerInputRouter.GetAimStick();
+            Vector3 direction = Vector3.zero;
 
             if (stick.magnitude > controllerDeadzone)
-                lastControllerAim = stick.normalized;
+                direction = new Vector3(stick.x, 0f, stick.y);
+            else if (playerController != null)
+                direction = playerController.AimDirection;
 
-            Vector3 rawPoint = playerPoint + new Vector3(lastControllerAim.x, 0f, lastControllerAim.y) * maxAimDistance;
+            direction.y = 0f;
+
+            if (direction.sqrMagnitude < 0.001f)
+                return false;
+
+            Vector3 rawPoint = playerPoint + direction.normalized * maxAimDistance;
             point = SmoothAimPoint(rawPoint);
             return true;
         }
@@ -206,10 +218,9 @@ public class SmoothMidCamera : MonoBehaviour
             return;
 
         nextBossCheckTime = Time.time + bossCheckInterval;
-
         boss = null;
 
-        if (string.IsNullOrWhiteSpace(bossTag))
+        if (string.IsNullOrEmpty(bossTag))
             return;
 
         try
@@ -238,62 +249,6 @@ public class SmoothMidCamera : MonoBehaviour
         }
     }
 
-    void UpdateInputDevice()
-    {
-        Vector3 mousePosition = Input.mousePosition;
-
-        if (!mouseStarted)
-        {
-            lastMousePosition = mousePosition;
-            mouseStarted = true;
-        }
-        else if ((mousePosition - lastMousePosition).sqrMagnitude > 0.25f)
-        {
-            usingController = false;
-            lastMousePosition = mousePosition;
-        }
-
-        if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2))
-            usingController = false;
-
-        Vector2 rightStick = GetRightStick();
-
-        if (rightStick.magnitude > controllerDeadzone)
-            usingController = true;
-
-        for (int i = 0; i <= 19; i++)
-        {
-            if (Input.GetKeyDown((KeyCode)((int)KeyCode.JoystickButton0 + i)))
-            {
-                usingController = true;
-                break;
-            }
-        }
-    }
-
-    Vector2 GetRightStick()
-    {
-        return new Vector2(
-            GetAxisRawSafe(rightStickHorizontalAxis),
-            GetAxisRawSafe(rightStickVerticalAxis)
-        );
-    }
-
-    float GetAxisRawSafe(string axisName)
-    {
-        if (string.IsNullOrWhiteSpace(axisName))
-            return 0f;
-
-        try
-        {
-            return Input.GetAxisRaw(axisName);
-        }
-        catch (ArgumentException)
-        {
-            return 0f;
-        }
-    }
-
     Vector3 Flat(Vector3 value)
     {
         value.y = 0f;
@@ -306,7 +261,7 @@ public class SmoothMidCamera : MonoBehaviour
         {
             shakeRemaining -= Time.deltaTime;
 
-            Vector2 random = UnityEngine.Random.insideUnitCircle * shakeMagnitude;
+            Vector2 random = Random.insideUnitCircle * shakeMagnitude;
             shakeOffset = new Vector3(random.x, 0f, random.y);
 
             if (shakeRemaining <= 0f)

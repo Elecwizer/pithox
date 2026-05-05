@@ -3474,6 +3474,7 @@ MonoBehaviour:
   activeSlot1: {fileID: 0}
   activeSlot2: {fileID: 0}
   abilityHolder: {fileID: 0}
+  ownedActivePrefabs: []
 --- !u!114 &807352984 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 359491041991972130, guid: efefe90e40e8bdd4384579396b9052c0, type: 3}
@@ -5476,6 +5477,10 @@ PrefabInstance:
       propertyPath: animator
       value: 
       objectReference: {fileID: 1120634951}
+    - target: {fileID: 2747975677932607304, guid: efefe90e40e8bdd4384579396b9052c0, type: 3}
+      propertyPath: faceMouse
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2747975677932607304, guid: efefe90e40e8bdd4384579396b9052c0, type: 3}
       propertyPath: dashInvincibleTime
       value: 0.25

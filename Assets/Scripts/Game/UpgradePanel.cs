@@ -52,7 +52,7 @@ namespace Pithox.Game
         [Header("Active Upgrade Pool")]
         [SerializeField] ActiveUpgradeOption[] activeOptions;
 
-        [Header("Controller Pick")]
+        [Header("Controller D-Pad Optional")]
         [SerializeField] string dpadHorizontalAxis = "DPadHorizontal";
         [SerializeField] string dpadVerticalAxis = "DPadVertical";
 
@@ -81,6 +81,7 @@ namespace Pithox.Game
         void OnDisable()
         {
             LevelManager.OnLevelUp -= HandleLevelUp;
+            global::PlayerInputRouter.SetGameplayInputBlocked(false);
         }
 
         void Update()
@@ -98,13 +99,13 @@ namespace Pithox.Game
             lastDpadX = dpadX;
             lastDpadY = dpadY;
 
-            if (global::PlayerInputRouter.GetUpgradeLeftDown() || dpadLeft || Input.GetKeyDown(KeyCode.JoystickButton13))
+            if (global::PlayerInputRouter.GetUpgradeLeftDown() || dpadLeft)
                 ChooseSlot(0);
 
-            if (global::PlayerInputRouter.GetUpgradeTopDown() || dpadUp || Input.GetKeyDown(KeyCode.JoystickButton15))
+            if (global::PlayerInputRouter.GetUpgradeTopDown() || dpadUp)
                 ChooseSlot(1);
 
-            if (global::PlayerInputRouter.GetUpgradeRightDown() || dpadRight || Input.GetKeyDown(KeyCode.JoystickButton14))
+            if (global::PlayerInputRouter.GetUpgradeRightDown() || dpadRight)
                 ChooseSlot(2);
         }
 
@@ -144,6 +145,8 @@ namespace Pithox.Game
 
             if (panelRoot != null)
                 panelRoot.SetActive(true);
+
+            global::PlayerInputRouter.SetGameplayInputBlocked(true);
 
             lastDpadX = 0f;
             lastDpadY = 0f;
@@ -285,6 +288,7 @@ namespace Pithox.Game
             currentChoices[slot].Apply?.Invoke();
 
             Time.timeScale = 1f;
+            global::PlayerInputRouter.SetGameplayInputBlocked(false);
 
             if (panelRoot != null)
                 panelRoot.SetActive(false);
