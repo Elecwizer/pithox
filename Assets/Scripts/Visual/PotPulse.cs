@@ -5,13 +5,22 @@ namespace Pithox.Visual
 {
     public class PotPulse : MonoBehaviour
     {
+        [Header("References")]
         [SerializeField] Light potLight;
         [SerializeField] Renderer liquidRenderer;
+
+        [Header("Pulse")]
+        [SerializeField] bool pulseOnTombPlaced = true;
         [SerializeField] float baseIntensity = 4f;
         [SerializeField] float pulseAmplitude = 1.2f;
         [SerializeField] float pulseSpeed = 1.6f;
         [SerializeField] float spikeMultiplier = 3f;
         [SerializeField] float spikeDecay = 4f;
+
+        [Header("Place VFX")]
+        [SerializeField] GameObject placeVfxPrefab;
+        [SerializeField] Transform placeVfxPoint;
+        [SerializeField] float placeVfxLifetime = 1f;
 
         static readonly int EmissionColorId = Shader.PropertyToID("_EmissionColor");
 
@@ -22,22 +31,36 @@ namespace Pithox.Visual
         void Awake()
         {
             block = new MaterialPropertyBlock();
-            if (potLight == null) potLight = GetComponentInChildren<Light>();
+
+            if (potLight == null)
+                potLight = GetComponentInChildren<Light>();
         }
 
         void OnEnable()
         {
-            PlayerTombCarry.OnTombPlaced += HandleTombPlaced;
+            if (pulseOnTombPlaced)
+                PlayerTombCarry.OnTombPlaced += TriggerPulse;
         }
 
         void OnDisable()
         {
-            PlayerTombCarry.OnTombPlaced -= HandleTombPlaced;
+            PlayerTombCarry.OnTombPlaced -= TriggerPulse;
         }
 
-        void HandleTombPlaced()
+        public void TriggerPulse()
         {
             spike = 1f;
+            SpawnPlaceVfx();
+        }
+
+        void SpawnPlaceVfx()
+        {
+            if (placeVfxPrefab == null)
+                return;
+
+            Transform point = placeVfxPoint != null ? placeVfxPoint : transform;
+            GameObject vfx = Instantiate(placeVfxPrefab, point.position, point.rotation);
+            Destroy(vfx, Mathf.Max(0.05f, placeVfxLifetime));
         }
 
         void Update()
@@ -51,7 +74,8 @@ namespace Pithox.Visual
                 spike = Mathf.Max(0f, spike - Time.deltaTime * spikeDecay);
             }
 
-            if (potLight != null) potLight.intensity = intensity;
+            if (potLight != null)
+                potLight.intensity = intensity;
 
             if (liquidRenderer != null)
             {

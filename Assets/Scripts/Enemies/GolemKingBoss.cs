@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using Pithox.Combat;
 using UnityEngine;
 using UnityEngine.AI;
@@ -57,6 +58,18 @@ namespace Pithox.Enemies
         [Header("Activation")]
         [SerializeField] bool activeOnStart = true;
         [SerializeField] bool activateBossTrigger;
+
+        [Header("Tomb Destruction")]
+        [SerializeField] string tombTag = "Tomb";
+        [SerializeField] GameObject tombDestroyVfxPrefab;
+        [SerializeField] float tombDestroyVfxDestroyDelay = 2f;
+        [SerializeField] bool destroyTombsOnCollision = true;
+        [SerializeField] bool useTombBreakRadiusCheck = true;
+        [SerializeField] float tombBreakCheckRadius = 2f;
+        [SerializeField] LayerMask tombBreakCheckMask = ~0;
+        [SerializeField] bool destroyAllTombsBeforePhase2Revive = true;
+        [SerializeField] float phase2TombSuckDuration = 1.2f;
+        [SerializeField] float phase2TombSuckArcHeight = 0.75f;
 
         [Header("Animator")]
         [SerializeField] Animator animator;
@@ -256,6 +269,7 @@ namespace Pithox.Enemies
         HitFlash hitFlash;
         Coroutine damageBarRoutine;
         Coroutine phase2RevivalRoutine;
+        readonly HashSet<GameObject> destroyedTombs = new HashSet<GameObject>();
 
         public int CurrentPhase => phase;
         public bool IsPhase2 => phase >= 2;
@@ -332,6 +346,9 @@ namespace Pithox.Enemies
                 return;
 
             base.Update();
+
+            if (!IsDead)
+                TickTombBreakRadiusCheck();
 
             if (IsDead || playerTarget == null || agent == null || !agent.isOnNavMesh)
                 return;
@@ -601,6 +618,9 @@ namespace Pithox.Enemies
             }
 
             yield return new WaitForSeconds(phase2Object1ActiveBeforeRevive);
+
+            if (destroyAllTombsBeforePhase2Revive)
+                yield return StartCoroutine(SuckAndDestroyAllTombsToBoss());
 
             if (agent != null && agentWasEnabled)
             {
@@ -1128,6 +1148,153 @@ namespace Pithox.Enemies
 
             bossAction = BossAction.None;
             ResumeAgent();
+        }
+
+        void OnCollisionEnter(Collision collision)
+        {
+            if (collision == null)
+                return;
+
+            TryDestroyTomb(collision.gameObject);
+        }
+
+        void OnTriggerEnter(Collider other)
+        {
+            if (other == null)
+                return;
+
+            TryDestroyTomb(other.gameObject);
+        }
+
+        void TickTombBreakRadiusCheck()
+        {
+            if (!destroyTombsOnCollision || !useTombBreakRadiusCheck || tombBreakCheckRadius <= 0f)
+                return;
+
+            Collider[] hits = Physics.OverlapSphere(
+                transform.position,
+                tombBreakCheckRadius,
+                tombBreakCheckMask,
+                QueryTriggerInteraction.Collide
+            );
+
+            for (int i = 0; i < hits.Length; i++)
+            {
+                if (hits[i] == null)
+                    continue;
+
+                TryDestroyTomb(hits[i].gameObject);
+            }
+        }
+
+        void TryDestroyTomb(GameObject hitObject)
+        {
+            if (!destroyTombsOnCollision || hitObject == null)
+                return;
+
+            GameObject tomb = FindTaggedTombObject(hitObject);
+
+            if (tomb == null)
+                return;
+
+            DestroyTomb(tomb, tomb.transform.position);
+        }
+
+        GameObject FindTaggedTombObject(GameObject hitObject)
+        {
+            if (hitObject == null)
+                return null;
+
+            Transform current = hitObject.transform;
+
+            while (current != null)
+            {
+                if (current.CompareTag(tombTag))
+                    return current.gameObject;
+
+                current = current.parent;
+            }
+
+            return null;
+        }
+
+        IEnumerator SuckAndDestroyAllTombsToBoss()
+        {
+            GameObject[] tombObjects = GameObject.FindGameObjectsWithTag(tombTag);
+
+            if (tombObjects == null || tombObjects.Length == 0)
+                yield break;
+
+            Transform[] tombs = new Transform[tombObjects.Length];
+            Vector3[] startPositions = new Vector3[tombObjects.Length];
+            int count = 0;
+
+            for (int i = 0; i < tombObjects.Length; i++)
+            {
+                if (tombObjects[i] == null || destroyedTombs.Contains(tombObjects[i]))
+                    continue;
+
+                tombs[count] = tombObjects[i].transform;
+                startPositions[count] = tombObjects[i].transform.position;
+                count++;
+            }
+
+            if (count == 0)
+                yield break;
+
+            float duration = Mathf.Max(0.01f, phase2TombSuckDuration);
+            float time = 0f;
+
+            while (time < duration)
+            {
+                time += Time.deltaTime;
+                float t = Mathf.Clamp01(time / duration);
+                float smoothT = Mathf.SmoothStep(0f, 1f, t);
+                Vector3 target = transform.position;
+
+                for (int i = 0; i < count; i++)
+                {
+                    if (tombs[i] == null)
+                        continue;
+
+                    Vector3 pos = Vector3.Lerp(startPositions[i], target, smoothT);
+                    pos.y += Mathf.Sin(smoothT * Mathf.PI) * phase2TombSuckArcHeight;
+                    tombs[i].position = pos;
+                }
+
+                yield return null;
+            }
+
+            Vector3 destroyPosition = transform.position;
+
+            for (int i = 0; i < count; i++)
+            {
+                if (tombs[i] == null)
+                    continue;
+
+                DestroyTomb(tombs[i].gameObject, destroyPosition);
+            }
+        }
+
+        void DestroyTomb(GameObject tomb, Vector3 vfxPosition)
+        {
+            if (tomb == null || destroyedTombs.Contains(tomb))
+                return;
+
+            destroyedTombs.Add(tomb);
+            SpawnTombDestroyVfx(vfxPosition);
+            Destroy(tomb);
+        }
+
+        void SpawnTombDestroyVfx(Vector3 position)
+        {
+            if (tombDestroyVfxPrefab == null)
+                return;
+
+            GameObject vfx = Instantiate(tombDestroyVfxPrefab, position, tombDestroyVfxPrefab.transform.rotation);
+
+            if (tombDestroyVfxDestroyDelay > 0f)
+                Destroy(vfx, tombDestroyVfxDestroyDelay);
         }
 
         void DealDamageToPlayer(float damage, Vector3 hitPoint, Vector3 hitDirection, int knockback)

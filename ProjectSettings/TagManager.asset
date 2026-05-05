@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - Tomb
+  - Boss
   layers:
   - Default
   - TransparentFX

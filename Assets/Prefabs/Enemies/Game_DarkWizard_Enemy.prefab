@@ -788,7 +788,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 619ed9f6cf256554ca7d2227d3d932ab, type: 2}
+  - {fileID: 2100000, guid: e6a81d02f4e208e4d910246ff031c0b9, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -896,7 +896,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 619ed9f6cf256554ca7d2227d3d932ab, type: 2}
+  - {fileID: 2100000, guid: bc857c0d677a81140a83f4d57a99482f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1412,7 +1412,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 619ed9f6cf256554ca7d2227d3d932ab, type: 2}
+  - {fileID: 2100000, guid: d93db87fff572e74fbdff2066265120b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -3269,6 +3269,14 @@ MonoBehaviour:
   attackArcDegrees: 125
   projectileSpawnDelay: 0.28
   castResumeMoveDelay: 0.58
+  lineOfSightBlockMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  lineOfSightHeight: 1.15
+  navSampleRadius: 2.4
+  pursuitLeadSeconds: 0.28
+  chargeRepulseMeters: 1.35
+  chargeSpeedThreshold: 3.4
 --- !u!136 &9200155004
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -3376,7 +3384,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 619ed9f6cf256554ca7d2227d3d932ab, type: 2}
+  - {fileID: 2100000, guid: bc857c0d677a81140a83f4d57a99482f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
