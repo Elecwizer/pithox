@@ -13,6 +13,18 @@ namespace Pithox.Player
         [SerializeField] float damageCameraShake = 0.25f;
         [SerializeField] UnityEvent onDeath;
 
+        [Header("Invincibility")]
+        [SerializeField] bool invincible;
+        [SerializeField] float invincibleTimer;
+
+        [Header("SFX")]
+        [SerializeField] AudioSource sfxSource;
+        [SerializeField] AudioClip hurtSfx;
+        [SerializeField] AudioClip deathSfx;
+        [SerializeField] float hurtVolume = 1f;
+        [SerializeField] float deathVolume = 1f;
+        [SerializeField] bool playHurtSfxOnDeath = false;
+
         [Header("Health UI")]
         [SerializeField] GameObject healthUiRoot;
         [SerializeField] Image healthFillImage;
@@ -41,9 +53,11 @@ namespace Pithox.Player
         public float MaxHealth => maxHealth;
         public float CurrentHealth => currentHealth;
         public bool IsDead => isDead;
+        public bool IsInvincible => invincible || invincibleTimer > 0f;
 
         public event Action<float, float> OnHealthChanged;
         public event Action<DamageData> OnDamaged;
+        public event Action<DamageData> OnDamageBlocked;
 
         void Awake()
         {
@@ -61,6 +75,19 @@ namespace Pithox.Player
             if (playerTombCarry == null)
                 playerTombCarry = GetComponent<PlayerTombCarry>();
 
+            if (sfxSource == null)
+            {
+                sfxSource = GetComponent<AudioSource>();
+
+                if (sfxSource == null)
+                    sfxSource = gameObject.AddComponent<AudioSource>();
+            }
+
+            sfxSource.playOnAwake = false;
+            sfxSource.spatialBlend = 0f;
+            sfxSource.volume = 1f;
+            sfxSource.mute = false;
+
             UpdateHealthUi(true);
         }
 
@@ -70,10 +97,22 @@ namespace Pithox.Player
             UpdateHealthUi(true);
         }
 
+        void Update()
+        {
+            if (invincibleTimer > 0f)
+                invincibleTimer -= Time.deltaTime;
+        }
+
         public void TakeDamage(DamageData damageData)
         {
             if (isDead)
                 return;
+
+            if (IsInvincible)
+            {
+                OnDamageBlocked?.Invoke(damageData);
+                return;
+            }
 
             currentHealth -= damageData.Amount;
             currentHealth = Mathf.Max(currentHealth, 0f);
@@ -83,14 +122,18 @@ namespace Pithox.Player
 
             UpdateHealthUi(false);
 
-            SmoothMidCamera.Shake(damageCameraShake, 0.12f);
+            global::SmoothMidCamera.Shake(damageCameraShake, 0.12f);
 
             if (currentHealth <= 0f)
             {
+                if (playHurtSfxOnDeath)
+                    PlaySfx(hurtSfx, hurtVolume);
+
                 Die();
                 return;
             }
 
+            PlaySfx(hurtSfx, hurtVolume);
             PlayTakeDamageAnimation();
         }
 
@@ -101,6 +144,7 @@ namespace Pithox.Player
 
             isDead = true;
 
+            PlayDeathSfx();
             PlayDieAnimation();
 
             if (playerController != null)
@@ -120,10 +164,42 @@ namespace Pithox.Player
             if (isDead)
                 return;
 
+            if (amount <= 0f)
+                return;
+
             currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
 
             OnHealthChanged?.Invoke(currentHealth, maxHealth);
             UpdateHealthUi(true);
+        }
+
+        public void HealPercent(float percent)
+        {
+            if (isDead)
+                return;
+
+            if (percent <= 0f)
+                return;
+
+            Heal(maxHealth * percent);
+        }
+
+        public void GiveInvincibility(float duration)
+        {
+            if (isDead)
+                return;
+
+            invincibleTimer = Mathf.Max(invincibleTimer, duration);
+        }
+
+        public void ClearTimedInvincibility()
+        {
+            invincibleTimer = 0f;
+        }
+
+        public void SetInvincible(bool value)
+        {
+            invincible = value;
         }
 
         public void SetMaxHealth(float newMaxHealth, bool fillHealth)
@@ -248,6 +324,33 @@ namespace Pithox.Player
                 return;
 
             animator.SetTrigger(dieTrigger);
+        }
+
+        void PlaySfx(AudioClip clip, float volume)
+        {
+            if (clip == null || sfxSource == null)
+                return;
+
+            sfxSource.PlayOneShot(clip, volume);
+        }
+
+        void PlayDeathSfx()
+        {
+            if (deathSfx == null)
+                return;
+
+            GameObject audioObject = new GameObject("PlayerDeathSfx");
+            audioObject.transform.position = transform.position;
+
+            AudioSource audioSource = audioObject.AddComponent<AudioSource>();
+            audioSource.clip = deathSfx;
+            audioSource.volume = deathVolume;
+            audioSource.spatialBlend = sfxSource != null ? sfxSource.spatialBlend : 0f;
+            audioSource.playOnAwake = false;
+
+            audioSource.Play();
+
+            Destroy(audioObject, deathSfx.length + 0.1f);
         }
     }
 }

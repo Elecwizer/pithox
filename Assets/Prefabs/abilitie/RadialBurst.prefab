@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3790997173554513952
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1557511065730719949}
+  - component: {fileID: 4056103161925163124}
+  m_Layer: 0
+  m_Name: RadialBurst
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1557511065730719949
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3790997173554513952}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4056103161925163124
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3790997173554513952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb3437ed0052c3d42a60870f4c25788e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RadialBurstActiveAbility
+  cooldown: 12
+  hitDelay: 1
+  radius: 5
+  damage: 20
+  enemyMask:
+    serializedVersion: 2
+    m_Bits: 64
+  usePlayerDamageBonus: 1
+  vfxPrefab: {fileID: 7647375919561907788, guid: 035ce8c9cfc34104991ce416daf8aebe, type: 3}
+  vfxSpawnPoint: {fileID: 0}
+  parentVfxToPlayer: 1
+  vfxLocalPosition: {x: 0, y: 0, z: 0}
+  vfxLocalRotation: {x: 0, y: 0, z: 0}
+  vfxLifetime: 1.5
+  sfxSource: {fileID: 0}
+  castSfx: {fileID: 8300000, guid: 58627a097fe35ca40a66fa9d23047aab, type: 3}
+  castVolume: 0.8
+  sfxPitchMin: 0.95
+  sfxPitchMax: 1.05

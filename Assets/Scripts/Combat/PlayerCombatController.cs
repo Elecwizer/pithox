@@ -11,6 +11,7 @@ namespace Pithox.Combat
         [Header("References")]
         [SerializeField] PlayerController playerController;
         [SerializeField] PlayerTombCarry tombCarry;
+        [SerializeField] PlayerStats stats;
         [SerializeField] Transform attackPoint;
         [SerializeField] AudioSource sfxSource;
         [SerializeField] Animator animator;
@@ -98,6 +99,9 @@ namespace Pithox.Combat
         float pendingSlashRange;
         readonly HashSet<Component> hitTargets = new();
 
+        public bool IsSlashWindupPending => slashIsPending;
+        public float PendingSlashRange => slashIsPending ? pendingSlashRange : 0f;
+
         void Awake()
         {
             if (playerController == null)
@@ -105,6 +109,9 @@ namespace Pithox.Combat
 
             if (tombCarry == null)
                 tombCarry = GetComponent<PlayerTombCarry>();
+
+            if (stats == null)
+                stats = GetComponent<PlayerStats>();
 
             if (attackPoint == null)
                 attackPoint = transform;
@@ -132,10 +139,10 @@ namespace Pithox.Combat
             if (slashCooldownTimer > 0f)
                 slashCooldownTimer -= Time.deltaTime;
 
-            if (Input.GetMouseButtonDown(lightAttackMouseButton))
+            if (Input.GetMouseButtonDown(lightAttackMouseButton) || global::PlayerInputRouter.GetLightAttackDown())
                 TryLightSlash();
 
-            if (Input.GetMouseButtonDown(heavyAttackMouseButton))
+            if (Input.GetMouseButtonDown(heavyAttackMouseButton) || global::PlayerInputRouter.GetHeavyAttackDown())
                 TryHeavySlash();
         }
 
@@ -147,7 +154,7 @@ namespace Pithox.Combat
             if (animator != null)
                 animator.SetTrigger("LightAttack");
 
-            float damage = baseLightDamage * generalDamageMUL * slashDamageMUL * lightDamageMUL;
+            float damage = GetFinalDamage(baseLightDamage * generalDamageMUL * slashDamageMUL * lightDamageMUL);
             float range = baseLightRange * slashRangeMUL * lightRangeMUL;
             float cooldown = baseLightCooldown * slashCooldownMUL * lightCooldownMUL;
             float enemyKnockback = baseLightEnemyKnockback * slashEnemyKnockbackMUL * lightEnemyKnockbackMUL;
@@ -177,7 +184,7 @@ namespace Pithox.Combat
             if (animator != null)
                 animator.SetTrigger("HeavyAttack");
 
-            float damage = baseHeavyDamage * generalDamageMUL * slashDamageMUL * heavyDamageMUL;
+            float damage = GetFinalDamage(baseHeavyDamage * generalDamageMUL * slashDamageMUL * heavyDamageMUL);
             float range = baseHeavyRange * slashRangeMUL * heavyRangeMUL;
             float cooldown = baseHeavyCooldown * slashCooldownMUL * heavyCooldownMUL;
             float enemyKnockback = baseHeavyEnemyKnockback * slashEnemyKnockbackMUL * heavyEnemyKnockbackMUL;
@@ -197,6 +204,14 @@ namespace Pithox.Combat
                 heavySlashVfx,
                 heavyArcColor
             );
+        }
+
+        float GetFinalDamage(float baseDamage)
+        {
+            float passiveMultiplier = stats != null ? 1f + stats.AttackDamageBonus : 1f;
+            float tempMultiplier = stats != null ? stats.DamageMultiplier : 1f;
+
+            return baseDamage * passiveMultiplier * tempMultiplier;
         }
 
         bool CanSlash()
@@ -496,13 +511,6 @@ namespace Pithox.Combat
             slashHitDelayMUL = Mathf.Max(0f, value);
         }
 
-        /// <summary>True from slash input until the delayed hit frame has finished (windup / active swing).</summary>
-        public bool IsSlashWindupPending => slashIsPending;
-
-        /// <summary>Range of the slash currently in flight (0 if none).</summary>
-        public float PendingSlashRange => slashIsPending ? pendingSlashRange : 0f;
-
-        /// <summary>World XZ aim direction for the pending slash. Zero if not in a slash.</summary>
         public Vector3 GetPendingSlashFlatDirection()
         {
             if (!slashIsPending)

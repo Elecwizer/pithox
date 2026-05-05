@@ -1,38 +1,47 @@
 using System;
 using UnityEngine;
+using Pithox.Player;
 
 namespace Pithox.Game
 {
     public class LevelManager : MonoBehaviour
     {
-        [SerializeField] ScoreManager scoreManager;
-        [SerializeField] int[] thresholds = { 500, 1500, 3500, 7000, 12000 };
+        [SerializeField] PlayerStats playerStats;
 
         int currentLevel = 1;
-        int nextThresholdIndex;
 
         public int CurrentLevel => currentLevel;
 
         public static event Action<int> OnLevelUp;
 
+        void Awake()
+        {
+            if (playerStats == null)
+                playerStats = FindAnyObjectByType<PlayerStats>();
+
+            if (playerStats != null)
+                currentLevel = playerStats.CurrentLevel;
+        }
+
         void OnEnable()
         {
-            ScoreManager.OnScoreChanged += HandleScoreChanged;
+            if (playerStats == null)
+                playerStats = FindAnyObjectByType<PlayerStats>();
+
+            if (playerStats != null)
+                playerStats.OnLevelUp += HandlePlayerLevelUp;
         }
 
         void OnDisable()
         {
-            ScoreManager.OnScoreChanged -= HandleScoreChanged;
+            if (playerStats != null)
+                playerStats.OnLevelUp -= HandlePlayerLevelUp;
         }
 
-        void HandleScoreChanged(int newScore)
+        void HandlePlayerLevelUp(int newLevel)
         {
-            while (nextThresholdIndex < thresholds.Length && newScore >= thresholds[nextThresholdIndex])
-            {
-                currentLevel += 1;
-                nextThresholdIndex += 1;
-                OnLevelUp?.Invoke(currentLevel);
-            }
+            currentLevel = newLevel;
+            OnLevelUp?.Invoke(newLevel);
         }
     }
 }

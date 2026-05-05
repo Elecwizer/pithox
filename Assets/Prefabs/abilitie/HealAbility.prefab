@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1373343969530084970
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4750861995510241519}
+  - component: {fileID: 4064160081861395911}
+  m_Layer: 0
+  m_Name: HealAbility
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4750861995510241519
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1373343969530084970}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.56006, y: 0, z: 7.86744}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4064160081861395911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1373343969530084970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10fcabc3a68bc884caaec88084a29352, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HealActiveAbility
+  duration: 3
+  healPerSecond: 5
+  cooldown: 12
+  breakOnHit: 1
+  breakDelayAfterHit: 0.2
+  invincibleDuringBreakDelay: 0
+  healVfxPrefab: {fileID: 9017484664307500583, guid: 1245b8d2997d5b34fb1637be70a7eb05, type: 3}
+  vfxParentOverride: {fileID: 0}
+  vfxLocalPosition: {x: 0, y: 0, z: 0}
+  vfxLocalRotation: {x: 0, y: 0, z: 0}
+  vfxDestroyDelay: 0.2
+  sfxSource: {fileID: 0}
+  activateSfx: {fileID: 8300000, guid: ec3c6116e6c856048b276ef2f3996eb9, type: 3}
+  breakSfx: {fileID: 8300000, guid: 5d3c98f34f4c12c41b3558d329a1e425, type: 3}
+  finishSfx: {fileID: 8300000, guid: 5d3c98f34f4c12c41b3558d329a1e425, type: 3}
+  activateVolume: 1
+  breakVolume: 0.6
+  finishVolume: 0.3

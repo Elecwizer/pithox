@@ -1,117 +1,199 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-namespace Pithox.Player
+public class PlayerActiveAbilitySlots : MonoBehaviour
 {
-    public interface IPlayerActiveAbility
+    [Header("Current Active Slots")]
+    [SerializeField] MonoBehaviour activeSlot1;
+    [SerializeField] MonoBehaviour activeSlot2;
+
+    [Header("Spawned Ability Holder")]
+    [SerializeField] Transform abilityHolder;
+
+    [Header("Owned Active Prefabs")]
+    [SerializeField] List<GameObject> ownedActivePrefabs = new List<GameObject>();
+
+    IPlayerActiveAbility slot1;
+    IPlayerActiveAbility slot2;
+
+    public bool HasFreeSlot => slot1 == null || slot2 == null;
+
+    void Awake()
     {
-        string AbilityName { get; }
-        bool CanUse { get; }
-        void Use(GameObject owner);
+        if (abilityHolder == null)
+            abilityHolder = transform;
+
+        RefreshSlots();
     }
 
-    public class PlayerActiveAbilitySlots : MonoBehaviour
+    void Update()
     {
-        [Header("Input")]
-        [SerializeField] KeyCode active1Key = KeyCode.E;
-        [SerializeField] KeyCode active2Key = KeyCode.Q;
+        if (PlayerInputRouter.GetActive1Down())
+            UseSlot1();
 
-        [Header("Controller")]
-        [SerializeField] bool controllerSupport = true;
-        [SerializeField] KeyCode active1Button = KeyCode.JoystickButton7;
-        [SerializeField] KeyCode active2Button = KeyCode.JoystickButton6;
-        [SerializeField] string active1Axis = "R2";
-        [SerializeField] string active2Axis = "L2";
-        [SerializeField] float triggerThreshold = 0.5f;
+        if (PlayerInputRouter.GetActive2Down())
+            UseSlot2();
+    }
 
-        MonoBehaviour slot1;
-        MonoBehaviour slot2;
-        bool active1AxisHeld;
-        bool active2AxisHeld;
+    void RefreshSlots()
+    {
+        slot1 = GetAbilityFromBehaviour(activeSlot1);
+        slot2 = GetAbilityFromBehaviour(activeSlot2);
+    }
 
-        public IPlayerActiveAbility Active1 => slot1 as IPlayerActiveAbility;
-        public IPlayerActiveAbility Active2 => slot2 as IPlayerActiveAbility;
-        public bool HasActive1 => Active1 != null;
-        public bool HasActive2 => Active2 != null;
+    public bool HasActiveAbility(GameObject abilityPrefab)
+    {
+        if (abilityPrefab == null)
+            return false;
 
-        void Update()
+        return ownedActivePrefabs.Contains(abilityPrefab);
+    }
+
+    public bool CanAddActiveAbility(GameObject abilityPrefab)
+    {
+        if (abilityPrefab == null)
+            return false;
+
+        if (!HasFreeSlot)
+            return false;
+
+        if (HasActiveAbility(abilityPrefab))
+            return false;
+
+        return true;
+    }
+
+    public bool TryAddActiveAbility(GameObject abilityPrefab)
+    {
+        if (!CanAddActiveAbility(abilityPrefab))
+            return false;
+
+        GameObject spawned = Instantiate(abilityPrefab, abilityHolder);
+        IPlayerActiveAbility ability = spawned.GetComponent<IPlayerActiveAbility>();
+
+        if (ability == null)
         {
-            PlayerInputRouter.Tick();
-
-            bool key1 = Input.GetKeyDown(active1Key);
-            bool key2 = Input.GetKeyDown(active2Key);
-            bool pad1 = controllerSupport && (Input.GetKeyDown(active1Button) || GetTriggerDown(active1Axis, ref active1AxisHeld));
-            bool pad2 = controllerSupport && (Input.GetKeyDown(active2Button) || GetTriggerDown(active2Axis, ref active2AxisHeld));
-
-            if (key1 || key2)
-                PlayerInputRouter.MarkKeyboardMouse();
-
-            if (pad1 || pad2)
-                PlayerInputRouter.MarkController();
-
-            if (key1 || pad1)
-                UseSlot(1);
-
-            if (key2 || pad2)
-                UseSlot(2);
-        }
-
-        bool GetTriggerDown(string axisName, ref bool held)
-        {
-            float value = Mathf.Abs(PlayerInputRouter.GetAxisRaw(axisName));
-            bool pressed = value >= triggerThreshold;
-            bool down = pressed && !held;
-            held = pressed;
-            return down;
-        }
-
-        public bool TryAddAbility(MonoBehaviour ability)
-        {
-            if (ability == null || !(ability is IPlayerActiveAbility))
-                return false;
-
-            if (slot1 == null)
-            {
-                slot1 = ability;
-                return true;
-            }
-
-            if (slot2 == null)
-            {
-                slot2 = ability;
-                return true;
-            }
-
+            Destroy(spawned);
             return false;
         }
 
-        public void SetSlot1(MonoBehaviour ability)
+        MonoBehaviour behaviour = ability as MonoBehaviour;
+
+        if (behaviour == null)
         {
-            slot1 = ability is IPlayerActiveAbility ? ability : null;
+            Destroy(spawned);
+            return false;
         }
 
-        public void SetSlot2(MonoBehaviour ability)
+        bool added = TryAddActiveAbility(behaviour);
+
+        if (!added)
         {
-            slot2 = ability is IPlayerActiveAbility ? ability : null;
+            Destroy(spawned);
+            return false;
         }
 
-        public void ClearSlot1()
+        ownedActivePrefabs.Add(abilityPrefab);
+        return true;
+    }
+
+    public bool TryAddActiveAbility(MonoBehaviour abilityBehaviour)
+    {
+        IPlayerActiveAbility ability = GetAbilityFromBehaviour(abilityBehaviour);
+
+        if (ability == null)
+            return false;
+
+        if (slot1 == null)
         {
-            slot1 = null;
+            activeSlot1 = abilityBehaviour;
+            slot1 = ability;
+            slot1.OnEquip(gameObject);
+            return true;
         }
 
-        public void ClearSlot2()
+        if (slot2 == null)
         {
-            slot2 = null;
+            activeSlot2 = abilityBehaviour;
+            slot2 = ability;
+            slot2.OnEquip(gameObject);
+            return true;
         }
 
-        public void UseSlot(int slotNumber)
+        return false;
+    }
+
+    public bool TrySetSlot(int slotNumber, MonoBehaviour abilityBehaviour)
+    {
+        IPlayerActiveAbility ability = GetAbilityFromBehaviour(abilityBehaviour);
+
+        if (ability == null)
+            return false;
+
+        if (slotNumber == 1)
         {
-            IPlayerActiveAbility ability = slotNumber == 1 ? Active1 : Active2;
+            if (slot1 != null)
+                slot1.OnUnequip(gameObject);
 
-            if (ability == null || !ability.CanUse)
-                return;
-
-            ability.Use(gameObject);
+            activeSlot1 = abilityBehaviour;
+            slot1 = ability;
+            slot1.OnEquip(gameObject);
+            return true;
         }
+
+        if (slotNumber == 2)
+        {
+            if (slot2 != null)
+                slot2.OnUnequip(gameObject);
+
+            activeSlot2 = abilityBehaviour;
+            slot2 = ability;
+            slot2.OnEquip(gameObject);
+            return true;
+        }
+
+        return false;
+    }
+
+    public void UseSlot1()
+    {
+        if (slot1 == null)
+            return;
+
+        slot1.Use(gameObject);
+    }
+
+    public void UseSlot2()
+    {
+        if (slot2 == null)
+            return;
+
+        slot2.Use(gameObject);
+    }
+
+    public void ClearSlot1()
+    {
+        if (slot1 != null)
+            slot1.OnUnequip(gameObject);
+
+        activeSlot1 = null;
+        slot1 = null;
+    }
+
+    public void ClearSlot2()
+    {
+        if (slot2 != null)
+            slot2.OnUnequip(gameObject);
+
+        activeSlot2 = null;
+        slot2 = null;
+    }
+
+    IPlayerActiveAbility GetAbilityFromBehaviour(MonoBehaviour behaviour)
+    {
+        if (behaviour == null)
+            return null;
+
+        return behaviour as IPlayerActiveAbility;
     }
 }

@@ -9,6 +9,7 @@ namespace Pithox.Player
         [SerializeField] Transform visualRoot;
         [SerializeField] Camera mainCamera;
         [SerializeField] PlayerStats stats;
+        [SerializeField] PlayerHealth playerHealth;
         [SerializeField] Animator animator;
 
         [Header("Movement")]
@@ -25,12 +26,16 @@ namespace Pithox.Player
         [SerializeField] bool faceMouse;
         [SerializeField] float mouseAimSmoothTime = 0.04f;
 
+        [Header("Controller Aim")]
+        [SerializeField] float controllerAimDeadzone = 0.25f;
+
         [Header("Dash")]
         [SerializeField] bool canDash;
         [SerializeField] KeyCode dashKey = KeyCode.LeftShift;
         [SerializeField] float dashSpeed = 16f;
         [SerializeField] float dashDuration = 0.12f;
         [SerializeField] float dashCooldown = 0.65f;
+        [SerializeField] float dashInvincibleTime = 0.5f;
 
         [Header("SFX")]
         [SerializeField] AudioSource sfxSource;
@@ -72,6 +77,9 @@ namespace Pithox.Player
             if (stats == null)
                 stats = GetComponent<PlayerStats>();
 
+            if (playerHealth == null)
+                playerHealth = GetComponent<PlayerHealth>();
+
             if (mainCamera == null)
                 mainCamera = Camera.main;
 
@@ -110,7 +118,7 @@ namespace Pithox.Player
             Vector2 moveInput = ReadMoveInput();
             Vector3 worldMoveDirection = ConvertInputToWorldDirection(moveInput);
 
-            UpdateMouseAim(dt);
+            UpdateAim(dt);
             UpdateDash(dt, worldMoveDirection);
             UpdateMovement(dt, worldMoveDirection);
             UpdateFacing(dt, worldMoveDirection);
@@ -122,15 +130,7 @@ namespace Pithox.Player
 
         Vector2 ReadMoveInput()
         {
-            float horizontal = 0f;
-            float vertical = 0f;
-
-            if (Input.GetKey(KeyCode.W)) vertical += 1f;
-            if (Input.GetKey(KeyCode.S)) vertical -= 1f;
-            if (Input.GetKey(KeyCode.D)) horizontal += 1f;
-            if (Input.GetKey(KeyCode.A)) horizontal -= 1f;
-
-            return Vector2.ClampMagnitude(new Vector2(horizontal, vertical), 1f);
+            return global::PlayerInputRouter.GetMoveInput();
         }
 
         Vector3 ConvertInputToWorldDirection(Vector2 moveInput)
@@ -209,7 +209,7 @@ namespace Pithox.Player
             if (!canDash)
                 return;
 
-            if (!Input.GetKeyDown(dashKey))
+            if (!Input.GetKeyDown(dashKey) && !global::PlayerInputRouter.GetDashDown())
                 return;
 
             if (dashCooldownTimer > 0f || dashTimer > 0f)
@@ -224,9 +224,15 @@ namespace Pithox.Player
             if (dashDirection.sqrMagnitude < 0.001f)
                 return;
 
-            dashVelocity = dashDirection.normalized * dashSpeed;
+            float dashSpeedMultiplier = stats != null ? 1f + stats.DashSpeedBonus : 1f;
+            float cooldownReduction = stats != null ? stats.DashCooldownReduction : 0f;
+
+            dashVelocity = dashDirection.normalized * dashSpeed * dashSpeedMultiplier;
             dashTimer = dashDuration;
-            dashCooldownTimer = dashCooldown;
+            dashCooldownTimer = dashCooldown * Mathf.Clamp(1f - cooldownReduction, 0.05f, 1f);
+
+            if (playerHealth != null)
+                playerHealth.GiveInvincibility(dashInvincibleTime);
 
             PlaySfx(dashSfx, dashVolume, 1f);
         }
@@ -236,11 +242,11 @@ namespace Pithox.Player
             if (attackFaceTimer > 0f)
                 attackFaceTimer -= dt;
 
-            bool shouldFaceMouse = faceMouse || attackFaceTimer > 0f;
+            bool shouldFaceAim = faceMouse || attackFaceTimer > 0f;
 
             Vector3 faceDirection = Vector3.zero;
 
-            if (shouldFaceMouse)
+            if (shouldFaceAim)
                 faceDirection = AimDirection;
             else if (worldMoveDirection.sqrMagnitude > 0.001f)
                 faceDirection = worldMoveDirection;
@@ -265,6 +271,23 @@ namespace Pithox.Player
                 targetRotation,
                 rotationSpeed * dt
             );
+        }
+
+        void UpdateAim(float dt)
+        {
+            Vector2 aimStick = global::PlayerInputRouter.GetAimStick();
+
+            if (global::PlayerInputRouter.UsingController && aimStick.magnitude > controllerAimDeadzone)
+            {
+                Vector3 stickDirection = ConvertInputToWorldDirection(aimStick);
+
+                if (stickDirection.sqrMagnitude > 0.001f)
+                    AimDirection = stickDirection.normalized;
+
+                return;
+            }
+
+            UpdateMouseAim(dt);
         }
 
         void UpdateMouseAim(float dt)
@@ -340,6 +363,7 @@ namespace Pithox.Player
 
             sfxSource.pitch = pitch;
             sfxSource.PlayOneShot(clip, volume);
+            sfxSource.pitch = 1f;
         }
 
         bool TryGetMouseWorldPosition(out Vector3 position)
