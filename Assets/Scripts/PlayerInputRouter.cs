@@ -96,15 +96,26 @@ public static class PlayerInputRouter
     {
         UpdateInputType();
 
-        Vector2 stick = new Vector2(
-            GetAxisRawSafe("RightStickHorizontal"),
-            GetAxisRawSafe("RightStickVertical")
-        );
+        Vector2 stick = GetAimStickRaw();
 
         if (stick.magnitude < stickThreshold)
             return Vector2.zero;
 
         return Vector2.ClampMagnitude(stick, 1f);
+    }
+
+    /// <summary>Right stick axes without deadzone clamping (use for aim + "is player aiming" checks).</summary>
+    public static Vector2 GetAimStickRaw()
+    {
+        UpdateInputType();
+
+        if (GameplayInputBlocked)
+            return Vector2.zero;
+
+        return new Vector2(
+            GetAxisRawSafe("RightStickHorizontal"),
+            GetAxisRawSafe("RightStickVertical")
+        );
     }
 
     public static bool GetLightAttackDown()
@@ -124,7 +135,7 @@ public static class PlayerInputRouter
         if (GameplayInputBlocked)
             return false;
 
-        return Input.GetMouseButtonDown(1) || Input.GetKeyDown(PS5_L1);
+        return Input.GetMouseButtonDown(1) || Input.GetKeyDown(PS5_R2);
     }
 
     public static bool GetDashDown()
@@ -154,7 +165,7 @@ public static class PlayerInputRouter
         if (GameplayInputBlocked)
             return false;
 
-        return Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(PS5_R2);
+        return Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(PS5_L1);
     }
 
     public static bool GetActive2Down()

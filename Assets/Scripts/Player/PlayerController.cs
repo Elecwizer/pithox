@@ -155,24 +155,17 @@ namespace Pithox.Player
 
         void UpdateAim(float dt, Vector3 worldMoveDirection)
         {
-            Vector2 aimStick = global::PlayerInputRouter.GetAimStick();
-
             if (global::PlayerInputRouter.UsingController)
             {
-                if (aimStick.magnitude > controllerAimDeadzone)
+                // Right stick only — never drive aim from movement (neutral stick keeps last AimDirection).
+                Vector2 aimRaw = global::PlayerInputRouter.GetAimStickRaw();
+                if (aimRaw.magnitude > controllerAimDeadzone)
                 {
-                    Vector3 stickDirection = ConvertInputToWorldDirection(aimStick);
+                    Vector2 aimPlanar = aimRaw / aimRaw.magnitude;
+                    Vector3 stickDirection = ConvertInputToWorldDirection(aimPlanar);
 
                     if (stickDirection.sqrMagnitude > 0.001f)
                         AimDirection = stickDirection.normalized;
-
-                    return;
-                }
-
-                if (worldMoveDirection.sqrMagnitude > 0.001f)
-                {
-                    AimDirection = worldMoveDirection.normalized;
-                    return;
                 }
 
                 return;
@@ -273,11 +266,13 @@ namespace Pithox.Player
             if (attackFaceTimer > 0f)
                 attackFaceTimer -= dt;
 
-            bool shouldFaceAim = faceMouse || attackFaceTimer > 0f;
-
             Vector3 faceDirection = Vector3.zero;
 
-            if (shouldFaceAim)
+            if (attackFaceTimer > 0f)
+                faceDirection = AimDirection;
+            else if (global::PlayerInputRouter.UsingController)
+                faceDirection = AimDirection;
+            else if (faceMouse)
                 faceDirection = AimDirection;
             else if (worldMoveDirection.sqrMagnitude > 0.001f)
                 faceDirection = worldMoveDirection;
