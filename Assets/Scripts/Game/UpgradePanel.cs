@@ -14,12 +14,14 @@ namespace Pithox.Game
         public class ActiveUpgradeOption
         {
             public string label;
+            [TextArea(2, 4)] public string description;
             public GameObject abilityPrefab;
         }
 
         struct ChoiceOption
         {
             public string Label;
+            public string Body;
             public bool CanChoose;
             public Action Apply;
             public PlayerPassiveController.PassiveUpgradeOption PassiveOption;
@@ -27,6 +29,7 @@ namespace Pithox.Game
 
             public ChoiceOption(
                 string label,
+                string body,
                 bool canChoose,
                 Action apply,
                 PlayerPassiveController.PassiveUpgradeOption passiveOption,
@@ -34,6 +37,7 @@ namespace Pithox.Game
             )
             {
                 Label = label;
+                Body = body;
                 CanChoose = canChoose;
                 Apply = apply;
                 PassiveOption = passiveOption;
@@ -46,7 +50,7 @@ namespace Pithox.Game
 
         [Header("UI")]
         [SerializeField] GameObject panelRoot;
-        [SerializeField] Button[] choiceButtons = new Button[3];
+        [SerializeField] GameObject[] choiceCards = new GameObject[3];
         [SerializeField] TMP_Text[] choiceLabels = new TMP_Text[3];
 
         [Header("Active Upgrade Pool")]
@@ -55,11 +59,14 @@ namespace Pithox.Game
         [Header("Controller D-Pad Optional")]
         [SerializeField] string dpadHorizontalAxis = "DPadHorizontal";
         [SerializeField] string dpadVerticalAxis = "DPadVertical";
+        [SerializeField] int preferredStartSlot = 1;
 
         ChoiceOption[] currentChoices = new ChoiceOption[3];
+        int focusedSlot;
 
         float lastDpadX;
         float lastDpadY;
+        bool suppressConfirmThisFrame;
 
         void Awake()
         {
@@ -99,13 +106,19 @@ namespace Pithox.Game
             lastDpadX = dpadX;
             lastDpadY = dpadY;
 
-            if (global::PlayerInputRouter.GetUpgradeLeftDown() || dpadLeft)
+            if (suppressConfirmThisFrame)
+            {
+                suppressConfirmThisFrame = false;
+                return;
+            }
+
+            if (global::PlayerInputRouter.GetUpgradeLeftDown() || dpadLeft || Input.GetKeyDown(KeyCode.LeftArrow))
                 ChooseSlot(0);
 
-            if (global::PlayerInputRouter.GetUpgradeTopDown() || dpadUp)
+            if (global::PlayerInputRouter.GetUpgradeConfirmDown() || dpadUp || Input.GetKeyDown(KeyCode.UpArrow))
                 ChooseSlot(1);
 
-            if (global::PlayerInputRouter.GetUpgradeRightDown() || dpadRight)
+            if (global::PlayerInputRouter.GetUpgradeRightDown() || dpadRight || Input.GetKeyDown(KeyCode.RightArrow))
                 ChooseSlot(2);
         }
 
@@ -127,20 +140,16 @@ namespace Pithox.Game
 
             currentChoices[2] = CreateRandomChoice(usedPassives, usedActives);
 
-            for (int i = 0; i < choiceButtons.Length; i++)
+            for (int i = 0; i < currentChoices.Length; i++)
             {
-                if (choiceButtons[i] == null)
-                    continue;
-
-                int slot = i;
-
-                choiceButtons[i].gameObject.SetActive(true);
-                choiceButtons[i].interactable = currentChoices[i].CanChoose;
-                choiceButtons[i].onClick.RemoveAllListeners();
-                choiceButtons[i].onClick.AddListener(() => ChooseSlot(slot));
-
                 if (i < choiceLabels.Length && choiceLabels[i] != null)
                     choiceLabels[i].text = currentChoices[i].Label;
+
+                UpgradeChoiceSlotPresenter presenter = GetCardPresenter(i);
+                if (presenter != null)
+                    presenter.Bind(currentChoices[i].Label, currentChoices[i].Body, currentChoices[i].CanChoose);
+                else
+                    TryBindFallbackTexts(i, currentChoices[i].Label, currentChoices[i].Body);
             }
 
             if (panelRoot != null)
@@ -150,6 +159,8 @@ namespace Pithox.Game
 
             lastDpadX = 0f;
             lastDpadY = 0f;
+            suppressConfirmThisFrame = true;
+            RefreshHighlights(false);
 
             Time.timeScale = 0f;
         }
@@ -168,6 +179,7 @@ namespace Pithox.Game
 
             return new ChoiceOption(
                 option.label,
+                BuildPassiveDescription(option),
                 true,
                 () => passiveController.ApplyPassive(option),
                 option,
@@ -186,6 +198,7 @@ namespace Pithox.Game
 
             return new ChoiceOption(
                 label,
+                BuildActiveDescription(option),
                 true,
                 () =>
                 {
@@ -274,7 +287,7 @@ namespace Pithox.Game
 
         ChoiceOption EmptyChoice(string label)
         {
-            return new ChoiceOption(label, false, null, null, null);
+            return new ChoiceOption(label, string.Empty, false, null, null, null);
         }
 
         void ChooseSlot(int slot)
@@ -292,6 +305,153 @@ namespace Pithox.Game
 
             if (panelRoot != null)
                 panelRoot.SetActive(false);
+        }
+
+        string BuildPassiveDescription(PlayerPassiveController.PassiveUpgradeOption option)
+        {
+            if (option == null)
+                return string.Empty;
+
+            switch (option.passiveType)
+            {
+                case PlayerPassiveController.PassiveType.MoveSpeedPercent:
+                    return $"Increases movement speed by {FormatPercent(option.amount)}.";
+
+                case PlayerPassiveController.PassiveType.AttackDamagePercent:
+                    return $"Increases attack damage by {FormatPercent(option.amount)}.";
+
+                case PlayerPassiveController.PassiveType.PickupRangeFlat:
+                    return $"Increases tombstone pickup range by +{FormatNumber(option.amount)} units.";
+
+                case PlayerPassiveController.PassiveType.StreakWindowFlat:
+                    return $"Increases combo timer duration by +{FormatNumber(option.amount)} seconds.";
+
+                case PlayerPassiveController.PassiveType.DashSpeedPercent:
+                    return $"Increases dash speed by {FormatPercent(option.amount)}.";
+
+                case PlayerPassiveController.PassiveType.DashCooldownReduction:
+                    return $"Reduces dash cooldown by {FormatPercent(option.amount)}.";
+
+                case PlayerPassiveController.PassiveType.HealPercent:
+                    return $"Instantly heals {FormatPercent(option.amount)} of max health.";
+            }
+
+            return "Improves one of your passive stats.";
+        }
+
+        static string FormatPercent(float value)
+        {
+            return $"{value * 100f:0.#}%";
+        }
+
+        static string FormatNumber(float value)
+        {
+            return value.ToString("0.##");
+        }
+
+        string BuildActiveDescription(ActiveUpgradeOption option)
+        {
+            if (option == null)
+                return string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(option.description))
+                return option.description.Trim();
+
+            string label = (option.label ?? string.Empty).Trim().ToLowerInvariant();
+            string prefabName = option.abilityPrefab != null
+                ? option.abilityPrefab.name.Trim().ToLowerInvariant()
+                : string.Empty;
+            string key = $"{label} {prefabName}";
+
+            if (key.Contains("crystal"))
+                return "Unleash 3 crystal waves in front of you. Hits close, mid, and far enemies in sequence.";
+
+            if (key.Contains("shield"))
+                return "Become invincible for a short time. The shield breaks after blocking a hit.";
+
+            if (key.Contains("heal"))
+                return "Heal over time for a short duration. Taking damage can break the effect early.";
+
+            if (key.Contains("radial") || key.Contains("burst"))
+                return "Charge then release a circular blast around you, damaging all nearby enemies.";
+
+            return "Use a powerful active ability with its own cooldown.";
+        }
+
+        void FocusFirstAvailable()
+        {
+            // Always start from the preferred slot (middle by default) so border/hint are visible immediately.
+            focusedSlot = Mathf.Clamp(preferredStartSlot, 0, currentChoices.Length - 1);
+        }
+
+        void SetFocusedSlot(int slot)
+        {
+            focusedSlot = Mathf.Clamp(slot, 0, currentChoices.Length - 1);
+            RefreshHighlights();
+        }
+
+        void MoveFocusedSlot(int delta)
+        {
+            int count = currentChoices.Length;
+            focusedSlot = (focusedSlot + delta + count) % count;
+
+            RefreshHighlights();
+        }
+
+        void RefreshHighlights(bool highlighted = false)
+        {
+            int count = Mathf.Min(choiceCards.Length, currentChoices.Length);
+            for (int i = 0; i < count; i++)
+            {
+                UpgradeChoiceSlotPresenter presenter = GetCardPresenter(i);
+                if (presenter == null)
+                    continue;
+
+                presenter.SetHighlighted(highlighted);
+            }
+        }
+
+        UpgradeChoiceSlotPresenter GetCardPresenter(int index)
+        {
+            if (index < 0 || index >= choiceCards.Length)
+                return null;
+
+            GameObject cardObject = choiceCards[index];
+            if (cardObject == null)
+                return null;
+
+            return cardObject.GetComponent<UpgradeChoiceSlotPresenter>()
+                ?? cardObject.GetComponentInChildren<UpgradeChoiceSlotPresenter>(true);
+        }
+
+        void TryBindFallbackTexts(int index, string title, string body)
+        {
+            if (index < 0 || index >= choiceCards.Length)
+                return;
+
+            GameObject cardObject = choiceCards[index];
+            if (cardObject == null)
+                return;
+
+            TMP_Text[] texts = cardObject.GetComponentsInChildren<TMP_Text>(true);
+
+            for (int i = 0; i < texts.Length; i++)
+            {
+                if (texts[i] == null)
+                    continue;
+
+                string n = texts[i].name.Trim();
+
+                if (string.Equals(n, "Title", StringComparison.OrdinalIgnoreCase))
+                    texts[i].text = title ?? string.Empty;
+                else if (string.Equals(n, "Body", StringComparison.OrdinalIgnoreCase))
+                {
+                    bool hasBody = !string.IsNullOrWhiteSpace(body);
+                    texts[i].gameObject.SetActive(hasBody);
+                    if (hasBody)
+                        texts[i].text = body.Trim();
+                }
+            }
         }
 
         float GetAxisRawSafe(string axisName)

@@ -318,6 +318,10 @@ namespace Pithox.Enemies
             UpdatePhase2Visual();
             UpdateBossUi();
             SnapHealthAnimation();
+
+            // Keep boss UI hidden before spawn/activation unless this boss is configured to start active.
+            if (!activeOnStart)
+                HideBossUi();
         }
 
         protected override void Start()
@@ -659,6 +663,9 @@ namespace Pithox.Enemies
             SetCollidersEnabled(true);
             ApplyPhaseStatsToAgent();
             UpdatePhase2Visual();
+            // If phase 2 visuals are enabled now (e.g. magic circle), replay particles/audio on activation.
+            if (phase2OnlyObject != null && phase2OnlyObject.activeInHierarchy)
+                PlayEnabledObjectEffects(phase2OnlyObject);
             ResetAttackTimers();
 
             if (animator != null)

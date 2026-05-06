@@ -196,6 +196,14 @@ public static class PlayerInputRouter
         return Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(PS5_Circle);
     }
 
+    public static bool GetUpgradeConfirmDown()
+    {
+        UpdateInputType();
+        return Input.GetKeyDown(KeyCode.Return)
+            || Input.GetKeyDown(KeyCode.KeypadEnter)
+            || Input.GetKeyDown(PS5_Cross);
+    }
+
     static float GetKeyboardAxis(KeyCode negative, KeyCode positive)
     {
         float value = 0f;
