@@ -58,6 +58,7 @@ namespace Pithox.Player
         public event Action<float, float> OnHealthChanged;
         public event Action<DamageData> OnDamaged;
         public event Action<DamageData> OnDamageBlocked;
+        public event Action OnDied;
 
         void Awake()
         {
@@ -156,6 +157,7 @@ namespace Pithox.Player
             if (playerTombCarry != null)
                 playerTombCarry.enabled = false;
 
+            OnDied?.Invoke();
             onDeath?.Invoke();
         }
 
