@@ -86,6 +86,7 @@ namespace Pithox.Enemies
         bool wasPlayerSlashPending;
         float nextSlashDodgeAllowedTime;
         float nextHitAnimatorAllowedTime;
+        float spawnSnapshotMeleeDamage;
 
         protected override float ChasePathRefreshSeconds => 0.18f;
 
@@ -97,7 +98,14 @@ namespace Pithox.Enemies
             if (animator == null)
                 animator = GetComponent<Animator>();
 
+            spawnSnapshotMeleeDamage = meleeDamage;
             chaseWeavePhase = (gameObject.GetEntityId().GetHashCode() & 1023) * 0.01f;
+        }
+
+        public override void ApplyWaveModifiers(int visualTier, float healthMultiplier, float speedMultiplier, float damageMultiplier)
+        {
+            base.ApplyWaveModifiers(visualTier, healthMultiplier, speedMultiplier, damageMultiplier);
+            meleeDamage = spawnSnapshotMeleeDamage * damageMultiplier;
         }
 
         protected override void Start()

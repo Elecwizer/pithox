@@ -69,6 +69,7 @@ namespace Pithox.Enemies
         float lastPlayerSampleTime = -1f;
         Vector3 smoothedPlayerVelocityFlat;
         Collider[] selfColliders;
+        float spawnSnapshotProjectileDamage;
 
         protected override float ChasePathRefreshSeconds => 0.18f;
 
@@ -80,8 +81,15 @@ namespace Pithox.Enemies
             if (animator == null)
                 animator = GetComponent<Animator>();
 
+            spawnSnapshotProjectileDamage = projectileDamage;
             strafePhase = Random.Range(0f, Mathf.PI * 2f);
             selfColliders = GetComponentsInChildren<Collider>(true);
+        }
+
+        public override void ApplyWaveModifiers(int visualTier, float healthMultiplier, float speedMultiplier, float damageMultiplier)
+        {
+            base.ApplyWaveModifiers(visualTier, healthMultiplier, speedMultiplier, damageMultiplier);
+            projectileDamage = spawnSnapshotProjectileDamage * damageMultiplier;
         }
 
         protected override void Update()

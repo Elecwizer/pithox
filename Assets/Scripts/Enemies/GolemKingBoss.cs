@@ -266,7 +266,6 @@ namespace Pithox.Enemies
         float footstepTimer;
         Vector3 originalScale;
 
-        HitFlash hitFlash;
         Coroutine damageBarRoutine;
         Coroutine phase2RevivalRoutine;
         readonly HashSet<GameObject> destroyedTombs = new HashSet<GameObject>();
@@ -305,7 +304,6 @@ namespace Pithox.Enemies
 
             originalScale = transform.localScale;
             bossHealth = phase1MaxHealth;
-            hitFlash = GetComponent<HitFlash>();
 
             if (animator == null)
                 animator = GetComponent<Animator>();

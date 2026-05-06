@@ -7,6 +7,13 @@ namespace Pithox.Enemies
     [RequireComponent(typeof(NavMeshAgent))]
     public class EnemyBase : MonoBehaviour, IDamageable
     {
+        static readonly string[][] TierVisualNameSets =
+        {
+            new[] { "Skeleton1", "Skeleton2", "Skeleton3" },
+            new[] { "Slime1", "Slime2", "Slime3" },
+            new[] { "DarkWizard1", "DarkWizard2", "DarkWizard3" },
+        };
+
         [Header("Core Stats")]
         [SerializeField] protected float maxHealth = 20f;
         [SerializeField] protected float moveSpeed = 3f;
@@ -33,8 +40,12 @@ namespace Pithox.Enemies
 
         protected Transform playerTarget;
         protected NavMeshAgent agent;
-        HitFlash hitFlash;
+        protected HitFlash hitFlash;
         float currentHealth;
+
+        float spawnSnapshotMaxHealth;
+        float spawnSnapshotMoveSpeed;
+        float spawnSnapshotTouchDamage;
         float nextTouchDamageTime;
         protected bool IsDead => isDead;
         protected bool isDead;
@@ -45,6 +56,9 @@ namespace Pithox.Enemies
         protected virtual void Awake()
         {
             currentHealth = maxHealth;
+            spawnSnapshotMaxHealth = maxHealth;
+            spawnSnapshotMoveSpeed = moveSpeed;
+            spawnSnapshotTouchDamage = touchDamage;
             agent = GetComponent<NavMeshAgent>();
             hitFlash = GetComponent<HitFlash>();
 
@@ -256,6 +270,63 @@ namespace Pithox.Enemies
         {
             GameObject playerObject = GameObject.FindGameObjectWithTag(playerTag);
             playerTarget = playerObject != null ? playerObject.transform : null;
+        }
+
+        /// <summary>
+        /// Call right after spawn (e.g. from SpawnManager). Applies visual tier (1–3) when <see cref="EnemyTierVisuals"/> is present,
+        /// then scales core stats from prefab snapshots.
+        /// </summary>
+        public virtual void ApplyWaveModifiers(int visualTier, float healthMultiplier, float speedMultiplier, float damageMultiplier)
+        {
+            ApplyTierVisualsIfPresent(visualTier);
+
+            maxHealth = spawnSnapshotMaxHealth * healthMultiplier;
+            currentHealth = maxHealth;
+            moveSpeed = spawnSnapshotMoveSpeed * speedMultiplier;
+            touchDamage = spawnSnapshotTouchDamage * damageMultiplier;
+
+            if (agent != null)
+                agent.speed = moveSpeed;
+        }
+
+        /// <summary>Enables SkeletonN / SlimeN / DarkWizardN roots matching tier (1–3); no-op if no known kit found.</summary>
+        protected void ApplyTierVisualsIfPresent(int tier)
+        {
+            int idx = Mathf.Clamp(tier - 1, 0, 2);
+            Transform[] all = GetComponentsInChildren<Transform>(true);
+
+            foreach (string[] names in TierVisualNameSets)
+            {
+                var roots = new Transform[3];
+                bool ok = true;
+                for (int i = 0; i < 3; i++)
+                {
+                    roots[i] = FindChildTransformByExactName(all, names[i]);
+                    if (roots[i] == null)
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+
+                if (!ok)
+                    continue;
+
+                for (int i = 0; i < 3; i++)
+                    roots[i].gameObject.SetActive(i == idx);
+                return;
+            }
+        }
+
+        static Transform FindChildTransformByExactName(Transform[] transforms, string exactName)
+        {
+            for (int i = 0; i < transforms.Length; i++)
+            {
+                if (transforms[i].name == exactName)
+                    return transforms[i];
+            }
+
+            return null;
         }
     }
 }
