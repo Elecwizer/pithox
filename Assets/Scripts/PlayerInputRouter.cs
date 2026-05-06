@@ -1,5 +1,8 @@
 using System;
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 public static class PlayerInputRouter
 {
@@ -59,6 +62,21 @@ public static class PlayerInputRouter
             UsingController = true;
         }
 
+#if ENABLE_INPUT_SYSTEM
+        // Fallback for platforms/controllers where legacy axes are not configured or mapped differently.
+        if (!UsingController && Gamepad.current != null)
+        {
+            Vector2 left = Gamepad.current.leftStick.ReadValue();
+            Vector2 right = Gamepad.current.rightStick.ReadValue();
+
+            if (left.sqrMagnitude > stickThreshold * stickThreshold ||
+                right.sqrMagnitude > stickThreshold * stickThreshold)
+            {
+                UsingController = true;
+            }
+        }
+#endif
+
         for (int i = 0; i <= 19; i++)
         {
             if (Input.GetKeyDown((KeyCode)((int)KeyCode.JoystickButton0 + i)))
@@ -81,10 +99,24 @@ public static class PlayerInputRouter
             GetKeyboardAxis(KeyCode.S, KeyCode.W)
         );
 
-        Vector2 stick = new Vector2(
+        Vector2 legacyStick = new Vector2(
             GetAxisRawSafe("Horizontal"),
             GetAxisRawSafe("Vertical")
         );
+
+        Vector2 stick = legacyStick;
+
+#if ENABLE_INPUT_SYSTEM
+        // Prefer direct gamepad stick when present to avoid platform-specific legacy axis mapping issues.
+        if (Gamepad.current != null)
+        {
+            Vector2 gamepadStick = Gamepad.current.leftStick.ReadValue();
+            if (gamepadStick.sqrMagnitude > stickThreshold * stickThreshold)
+                stick = gamepadStick;
+            else if (legacyStick.sqrMagnitude < gamepadStick.sqrMagnitude)
+                stick = gamepadStick;
+        }
+#endif
 
         if (stick.magnitude > stickThreshold)
             return Vector2.ClampMagnitude(stick, 1f);
@@ -112,10 +144,30 @@ public static class PlayerInputRouter
         if (GameplayInputBlocked)
             return Vector2.zero;
 
-        return new Vector2(
+        // Try legacy Input Manager axes first (for existing projects / mappings).
+        Vector2 legacy = new Vector2(
             GetAxisRawSafe("RightStickHorizontal"),
             GetAxisRawSafe("RightStickVertical")
         );
+
+#if ENABLE_INPUT_SYSTEM
+        // Prefer direct gamepad right stick to keep aiming/facing consistent across platforms.
+        if (Gamepad.current != null)
+        {
+            Vector2 gamepadStick = Gamepad.current.rightStick.ReadValue();
+
+            if (gamepadStick.sqrMagnitude > stickThreshold * stickThreshold)
+                return gamepadStick;
+
+            // If no meaningful gamepad input, preserve legacy value as fallback.
+            if (legacy.sqrMagnitude > 0.0001f)
+                return legacy;
+
+            return gamepadStick;
+        }
+#endif
+
+        return legacy;
     }
 
     public static bool GetLightAttackDown()
