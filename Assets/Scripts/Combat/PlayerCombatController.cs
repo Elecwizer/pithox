@@ -82,6 +82,10 @@ namespace Pithox.Combat
         [SerializeField] bool recoilOnlyOnHit = true;
         [SerializeField] bool playSlashSfxOnHitRegister = true;
 
+        [Header("Debug")]
+        [SerializeField] bool oneHitKillMobs = false;
+        [SerializeField] float oneHitKillDamage = 99999f;
+
         [Header("Light SFX")]
         [SerializeField] AudioClip[] lightSlashSfx;
         [SerializeField] float lightSlashVolume = 1f;
@@ -211,7 +215,12 @@ namespace Pithox.Combat
             float passiveMultiplier = stats != null ? 1f + stats.AttackDamageBonus : 1f;
             float tempMultiplier = stats != null ? stats.DamageMultiplier : 1f;
 
-            return baseDamage * passiveMultiplier * tempMultiplier;
+            float finalDamage = baseDamage * passiveMultiplier * tempMultiplier;
+
+            if (oneHitKillMobs)
+                finalDamage = Mathf.Max(finalDamage, oneHitKillDamage);
+
+            return finalDamage;
         }
 
         bool CanSlash()

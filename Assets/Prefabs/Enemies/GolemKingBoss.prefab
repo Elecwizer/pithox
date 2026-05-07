@@ -358,6 +358,8 @@ MonoBehaviour:
   phase2Object1ActiveBeforeRevive: 5
   phase2Object2DisableOnRevive: {fileID: 0}
   phase2Object1DisableDelayAfterRevive: 3
+  phase2RevivalObject1SceneName: Magic circle
+  phase2Object2DisableSceneName: Pot
   disableAgentDuringRevivalDrag: 1
   bossWaitsWhileObject1Finishes: 1
   phase2RevivalRoarSfx: {fileID: 8300000, guid: df75a9c19e4aee748ac846a1299001d3, type: 3}

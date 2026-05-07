@@ -100,10 +100,16 @@ namespace Pithox.Game
         [SerializeField] WaveBannerUI waveBanner;
         [SerializeField] GameObject bossPrefab;
         [SerializeField] Transform bossSpawnPoint;
+        [SerializeField] GameObject bossHudRoot;
+
+        [Header("Debug")]
+        [SerializeField] bool enableSkipToBossHotkey = true;
+        [SerializeField] KeyCode skipToBossKey = KeyCode.F8;
 
         WavePhase phase = WavePhase.CombatSpawning;
         int currentWaveIndex = 1;
         float phaseTimer;
+        Pithox.Enemies.GolemKingBoss currentBoss;
 
         public WavePhase Phase => phase;
         public int CurrentWaveIndex => currentWaveIndex;
@@ -131,10 +137,21 @@ namespace Pithox.Game
             ApplyWaveToSpawnManager();
             waveBanner?.ShowWave(currentWaveIndex);
             OnWaveCombatStarted?.Invoke(currentWaveIndex);
+
+            SetBossHudVisible(false);
+        }
+
+        void OnDisable()
+        {
+            if (currentBoss != null)
+                currentBoss.OnFinalDeathStarted -= HandleBossFinalDeathStarted;
         }
 
         void Update()
         {
+            if (enableSkipToBossHotkey && Input.GetKeyDown(skipToBossKey))
+                SkipToBossNow();
+
             float dt = Time.deltaTime;
 
             switch (phase)
@@ -222,7 +239,52 @@ namespace Pithox.Game
             Vector3 pos = bossSpawnPoint != null ? bossSpawnPoint.position : Vector3.zero;
             Quaternion rot = bossSpawnPoint != null ? bossSpawnPoint.rotation : Quaternion.identity;
             GameObject boss = Instantiate(bossPrefab, pos, rot);
+
+            // Some boss prefabs are authored inactive; force activation so scripts can run.
+            if (!boss.activeSelf)
+                boss.SetActive(true);
+
+            // Ensure boss behavior starts even if activeOnStart is off in the prefab.
+            Pithox.Enemies.GolemKingBoss bossBehaviour = boss.GetComponent<Pithox.Enemies.GolemKingBoss>();
+            if (bossBehaviour != null && bossHudRoot != null)
+                bossBehaviour.SetBossUiRoot(bossHudRoot);
+
+            if (bossBehaviour != null && !bossBehaviour.IsBossActive)
+                bossBehaviour.ActivateBoss();
+
+            if (currentBoss != null)
+                currentBoss.OnFinalDeathStarted -= HandleBossFinalDeathStarted;
+
+            currentBoss = bossBehaviour;
+            if (currentBoss != null)
+                currentBoss.OnFinalDeathStarted += HandleBossFinalDeathStarted;
+
+            SetBossHudVisible(true);
+
             OnBossSpawned?.Invoke(boss);
+        }
+
+        [ContextMenu("Skip To Boss Now")]
+        public void SkipToBossNow()
+        {
+            if (phase == WavePhase.Finished)
+                return;
+
+            currentWaveIndex = totalWaves;
+            phaseTimer = 0f;
+            SpawnBoss();
+            phase = WavePhase.Finished;
+        }
+
+        void HandleBossFinalDeathStarted(Pithox.Enemies.GolemKingBoss _)
+        {
+            SetBossHudVisible(false);
+        }
+
+        void SetBossHudVisible(bool visible)
+        {
+            if (bossHudRoot != null)
+                bossHudRoot.SetActive(visible);
         }
     }
 }

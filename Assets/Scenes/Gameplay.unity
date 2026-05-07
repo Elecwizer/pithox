@@ -1346,7 +1346,7 @@ MonoBehaviour:
   combatDurationSeconds: 30
   intermissionSeconds: 10
   bossSpawnDelaySeconds: 5
-  totalWaves: 5
+  totalWaves: 2
   waves:
   - visualTier: 1
     healthMultiplier: 1
@@ -1356,37 +1356,19 @@ MonoBehaviour:
     spawnIntervalMin: 2.2
     spawnIntervalMax: 4.2
   - visualTier: 1
-    healthMultiplier: 1.12
-    speedMultiplier: 1.06
-    damageMultiplier: 1.08
-    maxAliveEnemies: 6
-    spawnIntervalMin: 2
-    spawnIntervalMax: 3.8
-  - visualTier: 2
-    healthMultiplier: 1.28
-    speedMultiplier: 1.12
-    damageMultiplier: 1.15
-    maxAliveEnemies: 8
-    spawnIntervalMin: 1.7
-    spawnIntervalMax: 3.4
-  - visualTier: 2
-    healthMultiplier: 1.45
-    speedMultiplier: 1.18
-    damageMultiplier: 1.22
-    maxAliveEnemies: 10
-    spawnIntervalMin: 1.45
-    spawnIntervalMax: 3
-  - visualTier: 3
-    healthMultiplier: 1.65
-    speedMultiplier: 1.25
-    damageMultiplier: 1.3
-    maxAliveEnemies: 12
-    spawnIntervalMin: 1.2
-    spawnIntervalMax: 2.6
+    healthMultiplier: 1
+    speedMultiplier: 1
+    damageMultiplier: 1
+    maxAliveEnemies: 5
+    spawnIntervalMin: 2.2
+    spawnIntervalMax: 4.2
   spawnManager: {fileID: 1338848450}
   waveBanner: {fileID: 1786921569}
   bossPrefab: {fileID: 350355023170878607, guid: 9313ce022a8244737abbfcbf37693e80, type: 3}
   bossSpawnPoint: {fileID: 1140846568}
+  bossHudRoot: {fileID: 958153183}
+  enableSkipToBossHotkey: 1
+  skipToBossKey: 289
 --- !u!4 &230016885
 Transform:
   m_ObjectHideFlags: 0

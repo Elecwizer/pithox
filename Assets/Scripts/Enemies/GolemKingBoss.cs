@@ -227,6 +227,8 @@ namespace Pithox.Enemies
         [SerializeField] float phase2Object1ActiveBeforeRevive = 5f;
         [SerializeField] GameObject phase2Object2DisableOnRevive;
         [SerializeField] float phase2Object1DisableDelayAfterRevive = 3f;
+        [SerializeField] string phase2RevivalObject1SceneName = "Magic circle";
+        [SerializeField] string phase2Object2DisableSceneName = "";
         [SerializeField] bool disableAgentDuringRevivalDrag = true;
         [SerializeField] bool bossWaitsWhileObject1Finishes = true;
         [SerializeField] AudioClip phase2RevivalRoarSfx;
@@ -314,6 +316,8 @@ namespace Pithox.Enemies
             if (phase2RevivalObject1 != null)
                 phase2RevivalObject1.SetActive(false);
 
+            ResolveScenePhase2ObjectRefs();
+            EnsureBossUiReferences();
             ApplyPhaseStatsToAgent();
             UpdatePhase2Visual();
             UpdateBossUi();
@@ -330,7 +334,7 @@ namespace Pithox.Enemies
 
             if (activeOnStart)
                 ActivateBoss();
-            else
+            else if (!bossActive)
                 HideBossUi();
         }
 
@@ -401,6 +405,14 @@ namespace Pithox.Enemies
             activateBossTrigger = value;
         }
 
+        public void SetBossUiRoot(GameObject uiRoot)
+        {
+            bossUiRoot = uiRoot;
+            EnsureBossUiReferences();
+            UpdateBossUi();
+            SnapHealthAnimation();
+        }
+
         public void ActivateBoss()
         {
             bool wasInactive = !bossActive;
@@ -412,6 +424,7 @@ namespace Pithox.Enemies
             ApplyPhaseStatsToAgent();
             UpdatePhase2Visual();
             ResetAttackTimers();
+            EnsureBossUiReferences();
 
             ShowBossUi();
             UpdateBossUi();
@@ -573,6 +586,8 @@ namespace Pithox.Enemies
 
         IEnumerator Phase2RevivalSequence()
         {
+            ResolveScenePhase2ObjectRefs();
+
             yield return new WaitForSeconds(phase2DeadWaitBeforeDrag);
 
             bool agentWasEnabled = agent != null && agent.enabled;
@@ -1601,6 +1616,107 @@ namespace Pithox.Enemies
                 bossUiRoot.SetActive(true);
 
             SetBossNameText(CurrentBossName);
+        }
+
+        void EnsureBossUiReferences()
+        {
+            if (bossUiRoot == null)
+                bossUiRoot = FindSceneObjectByName("BossHealthBar");
+
+            if (bossUiRoot == null)
+                return;
+
+            if (healthFillImage == null)
+                healthFillImage = FindComponentInBossUi<Image>("HealthFill")
+                    ?? FindComponentInBossUi<Image>("BossHealthFill")
+                    ?? FindFilledImage(preferAnimation: false);
+
+            if (healthFillAnimationImage == null)
+                healthFillAnimationImage = FindComponentInBossUi<Image>("HealthFillAnimation")
+                    ?? FindComponentInBossUi<Image>("BossHealthFillAnimation")
+                    ?? FindFilledImage(preferAnimation: true);
+
+            if (healthSlider == null)
+                healthSlider = FindComponentInBossUi<Slider>("HealthFill")
+                    ?? FindComponentInBossUi<Slider>("BossHealthFill");
+        }
+
+        void ResolveScenePhase2ObjectRefs()
+        {
+            if (phase2RevivalObject1 == null && !string.IsNullOrWhiteSpace(phase2RevivalObject1SceneName))
+                phase2RevivalObject1 = FindSceneObjectByName(phase2RevivalObject1SceneName);
+
+            if (phase2Object2DisableOnRevive == null && !string.IsNullOrWhiteSpace(phase2Object2DisableSceneName))
+                phase2Object2DisableOnRevive = FindSceneObjectByName(phase2Object2DisableSceneName);
+        }
+
+        Image FindFilledImage(bool preferAnimation)
+        {
+            if (bossUiRoot == null)
+                return null;
+
+            Image[] images = bossUiRoot.GetComponentsInChildren<Image>(true);
+            Image fallback = null;
+
+            for (int i = 0; i < images.Length; i++)
+            {
+                Image img = images[i];
+                if (img == null)
+                    continue;
+                if (img.type != Image.Type.Filled)
+                    continue;
+
+                string n = img.name ?? string.Empty;
+                bool looksLikeAnimation = n.IndexOf("animation", System.StringComparison.OrdinalIgnoreCase) >= 0
+                    || n.IndexOf("delay", System.StringComparison.OrdinalIgnoreCase) >= 0;
+
+                if (preferAnimation == looksLikeAnimation)
+                    return img;
+
+                if (fallback == null)
+                    fallback = img;
+            }
+
+            return fallback;
+        }
+
+        T FindComponentInBossUi<T>(string objectName) where T : Component
+        {
+            if (bossUiRoot == null || string.IsNullOrEmpty(objectName))
+                return null;
+
+            Transform[] all = bossUiRoot.GetComponentsInChildren<Transform>(true);
+            for (int i = 0; i < all.Length; i++)
+            {
+                Transform t = all[i];
+                if (t == null)
+                    continue;
+
+                if (string.Equals(t.name, objectName, System.StringComparison.OrdinalIgnoreCase))
+                    return t.GetComponent<T>();
+            }
+
+            return null;
+        }
+
+        static GameObject FindSceneObjectByName(string objectName)
+        {
+            if (string.IsNullOrEmpty(objectName))
+                return null;
+
+            GameObject[] all = Resources.FindObjectsOfTypeAll<GameObject>();
+            for (int i = 0; i < all.Length; i++)
+            {
+                GameObject go = all[i];
+                if (go == null)
+                    continue;
+                if (!go.scene.IsValid() || !go.scene.isLoaded)
+                    continue;
+                if (go.name == objectName)
+                    return go;
+            }
+
+            return null;
         }
 
         void HideBossUi()
