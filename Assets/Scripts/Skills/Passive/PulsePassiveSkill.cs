@@ -1,5 +1,6 @@
 using UnityEngine;
 using Pithox.Combat;
+using Pithox.Player;
 
 namespace Pithox.Skills
 {
@@ -26,11 +27,19 @@ namespace Pithox.Skills
             DamageDealer damageDealer = pulse.GetComponent<DamageDealer>();
 
             if (damageDealer != null)
-                damageDealer.Initialize(playerTransform.gameObject, 0, 8f);
+                damageDealer.Initialize(playerTransform.gameObject, 0, 8f * GetScaledDamage(playerTransform));
 
             Object.Destroy(pulse, 0.4f);
+        }
 
-            Debug.Log("Passive triggered: Pulse");
+        float GetScaledDamage(Transform playerTransform)
+        {
+            PlayerStats stats = playerTransform.GetComponent<PlayerStats>();
+
+            if (stats == null)
+                return 1f;
+
+            return stats.DamageMultiplier * (1f + stats.AttackDamageBonus);
         }
     }
 }

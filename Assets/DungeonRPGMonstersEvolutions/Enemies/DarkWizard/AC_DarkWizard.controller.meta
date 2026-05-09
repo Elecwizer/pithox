@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1538511c01295f648b2cd2dc8d1733c0
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 329784
+  packageName: Dungeon RPG Monsters Evolutions - Stylized Low Poly Animated Enemies
+  packageVersion: 1.0
+  assetPath: Assets/DungeonRPGMonstersEvolutions/Enemies/DarkWizard/AC_DarkWizard.controller
+  uploadId: 780969

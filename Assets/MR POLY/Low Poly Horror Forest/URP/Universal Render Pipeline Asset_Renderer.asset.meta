@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 64b47a7eafff62b4a895bcf379e8c525
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 324389
+  packageName: Low Poly Horror Forest
+  packageVersion: 1.2
+  assetPath: Assets/MR POLY/Low Poly Horror Forest/URP/Universal Render Pipeline
+    Asset_Renderer.asset
+  uploadId: 776042

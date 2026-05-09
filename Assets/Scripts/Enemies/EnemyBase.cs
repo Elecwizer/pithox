@@ -1,36 +1,77 @@
 using Pithox.Combat;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace Pithox.Enemies
 {
+    [RequireComponent(typeof(NavMeshAgent))]
     public class EnemyBase : MonoBehaviour, IDamageable
     {
+        static readonly string[][] TierVisualNameSets =
+        {
+            new[] { "Skeleton1", "Skeleton2", "Skeleton3" },
+            new[] { "Slime1", "Slime2", "Slime3" },
+            new[] { "DarkWizard1", "DarkWizard2", "DarkWizard3" },
+        };
+
         [Header("Core Stats")]
         [SerializeField] protected float maxHealth = 20f;
         [SerializeField] protected float moveSpeed = 3f;
-        [SerializeField] protected float stopDistance = 1f;
+        [SerializeField] protected float stopDistance = 1.4f;
+        [SerializeField] protected float repathThreshold = 0.5f;
 
         [Header("Touch Damage")]
+        [SerializeField] protected bool useTouchDamage = true;
         [SerializeField] protected float touchDamage = 5f;
         [SerializeField] protected float touchDamageInterval = 0.5f;
         [SerializeField] protected float touchRange = 1.25f;
+
+        [Header("Hit Reaction")]
+        [SerializeField] float knockbackDistance = 0.4f;
 
         [Header("Death")]
         [SerializeField] GameObject tombPrefab;
         [SerializeField] AudioClip defaultDeathSfx;
         [SerializeField] AudioClip uniqueDeathSfx;
         [SerializeField] float deathSfxVolume = 1f;
+        [SerializeField] float deathCameraShake = 0.05f;
 
         [SerializeField] protected string playerTag = "Player";
 
         protected Transform playerTarget;
+        protected NavMeshAgent agent;
+        protected HitFlash hitFlash;
         float currentHealth;
+
+        float spawnSnapshotMaxHealth;
+        float spawnSnapshotMoveSpeed;
+        float spawnSnapshotTouchDamage;
         float nextTouchDamageTime;
-        bool isDead;
+        protected bool IsDead => isDead;
+        protected bool isDead;
+        Vector3 lastRepathAnchor;
+        float lastChasePathRefreshTime;
+        bool hasDestination;
 
         protected virtual void Awake()
         {
             currentHealth = maxHealth;
+            spawnSnapshotMaxHealth = maxHealth;
+            spawnSnapshotMoveSpeed = moveSpeed;
+            spawnSnapshotTouchDamage = touchDamage;
+            agent = GetComponent<NavMeshAgent>();
+            hitFlash = GetComponent<HitFlash>();
+
+            if (agent != null)
+            {
+                agent.speed = moveSpeed;
+                agent.stoppingDistance = stopDistance;
+                agent.updateRotation = false;
+                agent.acceleration = 16f;
+                agent.angularSpeed = 720f;
+                agent.autoBraking = true;
+                agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+            }
         }
 
         protected virtual void Start()
@@ -40,6 +81,9 @@ namespace Pithox.Enemies
 
         protected virtual void Update()
         {
+            if (isDead)
+                return;
+
             if (playerTarget == null)
             {
                 FindPlayerTarget();
@@ -56,10 +100,37 @@ namespace Pithox.Enemies
                 return;
 
             currentHealth -= damageData.Amount;
+
+            if (hitFlash != null)
+                hitFlash.Flash();
+
+            Pithox.Visual.HitVFX.PlayHit(damageData.HitPoint, new Color(1f, 0.9f, 0.7f));
+
+            ApplyKnockback(damageData);
+
             if (currentHealth <= 0f)
             {
                 Die();
             }
+            else
+            {
+                OnAfterDamageApplied(damageData);
+            }
+        }
+
+        protected virtual void OnAfterDamageApplied(DamageData damageData) { }
+
+        void ApplyKnockback(DamageData damageData)
+        {
+            if (agent == null || !agent.isOnNavMesh || knockbackDistance <= 0f)
+                return;
+
+            Vector3 push = damageData.HitDirection;
+            push.y = 0f;
+            if (push.sqrMagnitude < 0.0001f)
+                return;
+
+            agent.Move(push.normalized * knockbackDistance);
         }
 
         protected virtual void Die()
@@ -68,13 +139,34 @@ namespace Pithox.Enemies
                 return;
 
             isDead = true;
+            RunDeathPresentation();
+            DestroyEnemyGameObject();
+        }
 
-            if (tombPrefab != null)
-            {
-                Vector3 tombPosition = new Vector3(transform.position.x, 0f, transform.position.z);
-                Instantiate(tombPrefab, tombPosition, tombPrefab.transform.rotation);
-            }
+        protected void RunDeathPresentation()
+        {
+            PlayDeathCameraAndGlobalVfx();
+            SpawnDeathTomb();
+            PlayDeathSounds();
+        }
 
+        protected void PlayDeathCameraAndGlobalVfx()
+        {
+            SmoothMidCamera.Shake(deathCameraShake, 0.1f);
+            Pithox.Visual.HitVFX.PlayDeath(transform.position, new Color(1f, 0.6f, 0.3f));
+        }
+
+        protected void SpawnDeathTomb()
+        {
+            if (tombPrefab == null)
+                return;
+
+            Vector3 tombPosition = new Vector3(transform.position.x, 0f, transform.position.z);
+            Instantiate(tombPrefab, tombPosition, tombPrefab.transform.rotation);
+        }
+
+        protected void PlayDeathSounds()
+        {
             AudioClip clip = uniqueDeathSfx != null ? uniqueDeathSfx : defaultDeathSfx;
 
             if (clip != null)
@@ -90,29 +182,63 @@ namespace Pithox.Enemies
 
                 Destroy(sfxObject, clip.length);
             }
+        }
 
+        protected virtual void DestroyEnemyGameObject()
+        {
             Destroy(gameObject);
         }
 
         protected virtual void TickMovement()
         {
-            Vector3 toPlayer = playerTarget.position - transform.position;
-            toPlayer.y = 0f;
-
-            float sqrDistance = toPlayer.sqrMagnitude;
-            if (sqrDistance <= stopDistance * stopDistance)
+            if (agent == null || !agent.isOnNavMesh || playerTarget == null)
                 return;
 
-            if (toPlayer.sqrMagnitude > 0.001f)
+            Vector3 anchor = GetChaseAnchor();
+            Vector3 target = GetChaseDestination();
+            float thr2 = repathThreshold * repathThreshold;
+            bool anchorMoved = (anchor - lastRepathAnchor).sqrMagnitude > thr2;
+            float refresh = ChasePathRefreshSeconds;
+            bool timedRefresh = refresh > 0f && (Time.time - lastChasePathRefreshTime >= refresh);
+
+            if (!hasDestination || anchorMoved || timedRefresh)
             {
-                Vector3 moveDirection = toPlayer.normalized;
-                transform.position += moveDirection * moveSpeed * Time.deltaTime;
-                transform.forward = moveDirection;
+                agent.SetDestination(target);
+                lastRepathAnchor = anchor;
+                lastChasePathRefreshTime = Time.time;
+                hasDestination = true;
             }
+
+            Vector3 velocity = agent.velocity;
+            velocity.y = 0f;
+            if (velocity.sqrMagnitude > 0.01f)
+                transform.forward = velocity.normalized;
+        }
+
+        protected virtual Vector3 GetChaseDestination()
+        {
+            return playerTarget != null ? playerTarget.position : transform.position;
+        }
+
+        /// <summary>Used for repath gating (player motion). Offsets from <see cref="GetChaseDestination"/> are applied without forcing a new path every frame.</summary>
+        protected virtual Vector3 GetChaseAnchor()
+        {
+            return playerTarget != null ? playerTarget.position : transform.position;
+        }
+
+        /// <summary>When &gt; 0, chase destination is refreshed on this interval so lateral weave / strafe targets update without spamming SetDestination every frame.</summary>
+        protected virtual float ChasePathRefreshSeconds => 0f;
+
+        protected void InvalidateMovementDestination()
+        {
+            hasDestination = false;
         }
 
         protected virtual void TickTouchDamage()
         {
+            if (!useTouchDamage)
+                return;
+
             if (Time.time < nextTouchDamageTime)
                 return;
 
@@ -144,6 +270,63 @@ namespace Pithox.Enemies
         {
             GameObject playerObject = GameObject.FindGameObjectWithTag(playerTag);
             playerTarget = playerObject != null ? playerObject.transform : null;
+        }
+
+        /// <summary>
+        /// Call right after spawn (e.g. from SpawnManager). Applies visual tier (1–3) when <see cref="EnemyTierVisuals"/> is present,
+        /// then scales core stats from prefab snapshots.
+        /// </summary>
+        public virtual void ApplyWaveModifiers(int visualTier, float healthMultiplier, float speedMultiplier, float damageMultiplier)
+        {
+            ApplyTierVisualsIfPresent(visualTier);
+
+            maxHealth = spawnSnapshotMaxHealth * healthMultiplier;
+            currentHealth = maxHealth;
+            moveSpeed = spawnSnapshotMoveSpeed * speedMultiplier;
+            touchDamage = spawnSnapshotTouchDamage * damageMultiplier;
+
+            if (agent != null)
+                agent.speed = moveSpeed;
+        }
+
+        /// <summary>Enables SkeletonN / SlimeN / DarkWizardN roots matching tier (1–3); no-op if no known kit found.</summary>
+        protected void ApplyTierVisualsIfPresent(int tier)
+        {
+            int idx = Mathf.Clamp(tier - 1, 0, 2);
+            Transform[] all = GetComponentsInChildren<Transform>(true);
+
+            foreach (string[] names in TierVisualNameSets)
+            {
+                var roots = new Transform[3];
+                bool ok = true;
+                for (int i = 0; i < 3; i++)
+                {
+                    roots[i] = FindChildTransformByExactName(all, names[i]);
+                    if (roots[i] == null)
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+
+                if (!ok)
+                    continue;
+
+                for (int i = 0; i < 3; i++)
+                    roots[i].gameObject.SetActive(i == idx);
+                return;
+            }
+        }
+
+        static Transform FindChildTransformByExactName(Transform[] transforms, string exactName)
+        {
+            for (int i = 0; i < transforms.Length; i++)
+            {
+                if (transforms[i].name == exactName)
+                    return transforms[i];
+            }
+
+            return null;
         }
     }
 }

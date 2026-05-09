@@ -30,25 +30,24 @@ namespace Pithox.Skills
 
             DamageDealer[] damageDealers = orbit.GetComponentsInChildren<DamageDealer>();
 
+            float scaled = 7f * GetScaledDamage(playerTransform);
+
             foreach (DamageDealer damageDealer in damageDealers)
             {
-                damageDealer.Initialize(playerTransform.gameObject, chainPosition, 7f * GetDamageMultiplier(playerTransform));
+                damageDealer.Initialize(playerTransform.gameObject, chainPosition, scaled);
             }
 
             Object.Destroy(orbit, 3f);
-
-            Debug.Log($"Used Orbit Balls at chain position {chainPosition}");
         }
 
-        // Gets current player damage multiplier
-        float GetDamageMultiplier(Transform playerTransform)
+        float GetScaledDamage(Transform playerTransform)
         {
             PlayerStats stats = playerTransform.GetComponent<PlayerStats>();
 
             if (stats == null)
                 return 1f;
 
-            return stats.DamageMultiplier;
+            return stats.DamageMultiplier * (1f + stats.OrbitDamageBonus);
         }
     }
 }

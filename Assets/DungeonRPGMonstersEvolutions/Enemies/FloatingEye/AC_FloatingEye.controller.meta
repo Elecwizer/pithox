@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a3986135ca803b34e874f2da52e315d7
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 329784
+  packageName: Dungeon RPG Monsters Evolutions - Stylized Low Poly Animated Enemies
+  packageVersion: 1.0
+  assetPath: Assets/DungeonRPGMonstersEvolutions/Enemies/FloatingEye/AC_FloatingEye.controller
+  uploadId: 780969

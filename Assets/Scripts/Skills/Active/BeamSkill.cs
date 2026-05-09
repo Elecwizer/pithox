@@ -37,22 +37,19 @@ namespace Pithox.Skills
             DamageDealer damageDealer = beam.GetComponent<DamageDealer>();
 
             if (damageDealer != null)
-                damageDealer.Initialize(playerTransform.gameObject, chainPosition, 5f * GetDamageMultiplier(playerTransform));
+                damageDealer.Initialize(playerTransform.gameObject, chainPosition, 5f * GetScaledDamage(playerTransform));
 
             Object.Destroy(beam, 1.2f);
-
-            Debug.Log($"Used Beam at chain position {chainPosition}");
         }
 
-        // Gets current player damage multiplier
-        float GetDamageMultiplier(Transform playerTransform)
+        float GetScaledDamage(Transform playerTransform)
         {
             PlayerStats stats = playerTransform.GetComponent<PlayerStats>();
 
             if (stats == null)
                 return 1f;
 
-            return stats.DamageMultiplier;
+            return stats.DamageMultiplier * (1f + stats.BeamDamageBonus);
         }
     }
 }
