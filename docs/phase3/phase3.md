@@ -12,24 +12,22 @@
 
 ## Build Information
 - Engine: Unity
-- Platform: PC (Windows)
-- Build Type: Release Candidate (RC1)
-- Target Framerate: 60 FPS
-- Distribution: Local Build / Steam-ready prototype
+- Platform: PC 
 
 ## How to Run
 1. Download the build folder
-2. Run `PITHOX.exe`
-3. Start the game from the main menu
+2. Extract the `.zip` file
+3. Use Unity version 6000.4.5f1
+4. Go to Scenes folder and open the Gameplay scene
 
 ## Controls
-
-| Action | Input |
-|---|---|
-| Move | WASD |
-| Attack | Left Mouse Button |
-| Interact / Offer Tombstone | E |
-| Pause | ESC |
+- Light attack: left mouse click / R1
+- Heavy attack: right click / R2
+- Move: WASD / left joystick
+- Direction: cursor / right joystick
+- Skills (learned through level up): E & Q / L1 & L2
+- Pick up: space / X
+- Dash: shift / O
 
 ---
 
@@ -39,7 +37,6 @@
 
 ### Start Boundary
 - Player spawns beside **PITHOX** in the center of the moonlit arena.
-- Pressing Start begins the night and spawns enemy waves.
 
 ### Core Gameplay Loop
 The final gameplay loop is fully implemented:
@@ -101,9 +98,9 @@ Enemy telegraphs and attack timing were improved for gameplay readability and fa
 
 ## Environment & Lighting
 - Moonlit forest arena designed for high readability
-- Blue-tinted nighttime lighting used to reinforce atmosphere
+- nighttime raining used to reinforce atmosphere
 - Central PITHOX structure illuminated for player guidance
-- Fog and ambient lighting added for depth
+- Ambient lighting added for depth
 
 ## Materials & Shaders
 - Stylized materials applied across environment and enemies
@@ -178,7 +175,6 @@ This improved player awareness during crowded combat situations.
 Final HUD includes:
 - Player HP
 - Combo counter
-- Timer
 - Current score
 - Upgrade prompts
 
@@ -357,5 +353,3 @@ The final build contains:
 - Polished visuals and audio
 - Optimized and testable gameplay
 - A professional production workflow
-
-The project achieved the intended vision of a fast-paced survival arena experience while demonstrating strong technical implementation and production discipline.
