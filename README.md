@@ -53,8 +53,6 @@ Fight → Collect → Risk → Upgrade → Repeat
 This is a **prototype / vertical slice**, so some features are incomplete:
 
 - Limited enemy variety
-- No full upgrade system (yet)
-- No boss fight (yet)
 - UI is not fully polished
 - Audio is first-pass only
 - No settings/options menu
@@ -77,11 +75,14 @@ This is a **prototype / vertical slice**, so some features are incomplete:
 
 1. Download the game files
 2. Extract the `.zip` file
-3. Use Unity version 6000.4.4f1
+3. Use Unity version 6000.4.5f1
+4. Go to Scenes folder and open the Gameplay scene
 
 # Current Controls
-- Space to attack with basic attack
-- Passive skills that you learn are activated automatically periodically
-- E to collect tombstones that drop from killing monsters
-- E next to the pot to get points
-- When you reach target points for each level you will get enhancements options
+- Light attack: left mouse click / R1
+- Heavy attack: right click / R2
+- Move: WASD / left joystick
+- Direction: cursor / right joystick
+- Skills (learned through level up): E & Q / L1 & L2
+- Pick up: space / X
+- Dash: shift / O
